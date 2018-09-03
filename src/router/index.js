@@ -1,8 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Products from '@/components/Products/Products'
-import ProductPage from '@/components/ProductPage'
-import Hello from '@/components/HabitTracker'
+import Habits from '@/components/HabitTracker'
 import Login from '@/components/Login'
 import SignUp from '@/components/SignUp'
 
@@ -19,19 +17,9 @@ export default new Router({
       redirect: '/login'
     },
     {
-      path: '/demo',
-      name: 'Products',
-      component: Products
-    },
-    {
-      path: '/shop/:product_id',
-      name: 'ProductPage',
-      component: ProductPage
-    }, 
-    {
       path: '/home',
       name: 'HabitTracker',
-      component: Hello,
+      component: Habits,
     }, 
     {
       path: '/login',

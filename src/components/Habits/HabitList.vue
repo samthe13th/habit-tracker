@@ -32,7 +32,6 @@
   import * as _ from 'lodash'
   import db from '@/db'
 
-  const calendar = require('../../calendar.js').calendar;
   const date = new Date();
   const days = ['Su', 'M', 'T', 'W', 'Th', 'F', 'S'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'Ocober', 'November', 'December']
