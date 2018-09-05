@@ -105,11 +105,9 @@
                 }
                 weekData[habit.title].push(checked);
                 this.$set(this.weeklyData[rangeId], habit.title, checked);
-                console.log('weekday: ', this.weeklyData[rangeId]);
               })
             });
         });
-        console.log('WEEK: ', weekData)
       },
       getRange() {
         const range = [];

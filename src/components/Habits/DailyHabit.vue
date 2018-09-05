@@ -58,7 +58,6 @@
                 return this.habitData[day] && !this.habitData[day + 1];
             },
             connect: function (start, end) {
-                console.log('connect ', this.habitData)
                 return this.habitData[start] && this.habitData[end];
             },
             streak: function (end) {
@@ -109,6 +108,7 @@
     }
 
     .checkmark {
+        transition: width 200ms;
         position: absolute;
         top: 50%;
         left: 20px;

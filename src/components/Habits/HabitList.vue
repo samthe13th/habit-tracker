@@ -1,9 +1,11 @@
 <template>
 
   <div class="week">
-    <h1>Pull Your Goddamn Life Together</h1>
+    <h1>Daily Habits</h1>
 
     <div class="habit-log-header">
+
+      <div class="nav-btn nav-btn--left"></div>
       <div v-for="(day, i) in week" class="cell">
         <div style="height: 20px">
           <div v-if="i === 0">{{ sundayMonth }}</div>
@@ -15,6 +17,7 @@
           <div>{{ day.date }}</div>
         </div>
       </div>
+      <div class="nav-btn nav-btn--right"></div>
     </div>
 
     <daily-habit class="habit-bar-wrapper" 
@@ -23,6 +26,7 @@
       :habitDataRaw="getHabitData(dailyHabit.title)"
       :currentStreak="currentStreak">
     </daily-habit>
+
   </div>
 
 </template>
@@ -173,6 +177,35 @@
     border: solid 2px lightseagreen;
     height: 96px;
     width: 50px;
+  }
+
+  .nav-btn {
+    cursor: pointer;
+    content: '';
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    width: 0;
+    height: 0;
+    transition: all 200ms ease;
+    transform: translateY(150%)
+  }
+
+  .nav-btn--left {
+    border-right: 17px solid #eee;
+    margin-left: -20px;
+  }
+
+  .nav-btn--left:hover {
+    border-right-color: black;
+  }
+
+  .nav-btn--right {
+    margin-right: -20px;
+    border-left: 17px solid #eee;
+  }
+
+  .nav-btn--right:hover {
+    border-left-color: black;
   }
 </style>
 
