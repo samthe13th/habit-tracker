@@ -1,12 +1,13 @@
 <template>
 
   <div class="week">
+
     <h1>Daily Habits</h1>
 
     <div class="habit-log-header">
 
-      <div class="nav-btn nav-btn--left"></div>
-      <div v-for="(day, i) in week" class="cell">
+      <div class="nav-btn nav-btn--left" @click="$emit('change-week', startDate, 'left')"></div>
+      <div v-for="(day, i) in weeklyData" class="cell">
         <div style="height: 20px">
           <div v-if="i === 0">{{ sundayMonth }}</div>
           <div v-if="day.date === date && month !== sundayMonth">{{ month }}</div>
@@ -17,14 +18,13 @@
           <div>{{ day.date }}</div>
         </div>
       </div>
-      <div class="nav-btn nav-btn--right"></div>
+      <div class="nav-btn nav-btn--right" @click="$emit('change-week', startDate, 'right')">
+
+      </div>
     </div>
 
-    <daily-habit class="habit-bar-wrapper" 
-      v-for="dailyHabit in dailyHabits" 
-      @log-habit="logHabit" :title="dailyHabit.title"
-      :habitDataRaw="getHabitData(dailyHabit.title)"
-      :currentStreak="currentStreak">
+    <daily-habit class="habit-bar-wrapper" v-for="dailyHabit in dailyHabits" @log-habit="logHabit" :title="dailyHabit.title"
+      :habitDataRaw="getHabitData(dailyHabit.title)" :currentStreak="currentStreak">
     </daily-habit>
 
   </div>
@@ -54,14 +54,11 @@
     components: {
       DailyHabit,
     },
-    created() {
-      console.log("WEEK: ", this.weeklyData)
-    },
     data() {
       return {
         currentStreak: 30,
         sundayMonth,
-        week: getWeek(date),
+        week: [{},{},{},{},{},{},{}],
         calendarYear: 2018,
         months,
         days,
@@ -82,14 +79,24 @@
     props: [
       'dailyHabits',
       'weeklyData',
+      'startDate',
     ],
+    created() {
+      this.setWeek();
+      console.log('startDate: ', this.startDate, this.startDate.getFullYear())
+    },
     methods: {
       logHabit(day, title, checked) {
-        const dayDiff = day - date.getDay();
+        console.log('start date: ', this.startDate, this.startDate.getFullYear())
+        console.log('log ', day, title, checked)
         const logDate = new Date();
         const entry = {};
 
-        logDate.setDate(date.getDate() + dayDiff);
+        logDate.setYear(this.startDate.getFullYear())
+        logDate.setMonth(this.startDate.getMonth())
+        logDate.setDate(this.startDate.getDate() + day);
+
+        console.log("log date: ", logDate.getDate(), logDate.getMonth(), logDate.getFullYear())
         entry[title] = !checked;
 
         db.collection('log')
@@ -98,16 +105,25 @@
           .doc(String(logDate.getMonth()))
           .collection('Days')
           .doc(String(logDate.getDate()))
-          .set(entry, { merge: true })
+          .set(entry, { merge: true });
+      },
+      setStreak(year, month, day, habit) {
+        const previousDay = db.doc(`log/${year}/Months/${month}/Days/${day}`);
       },
       getHabitData(habitTitle) {
         let data = [false, false, false, false, false, false, false]
         this.weeklyData.forEach((day, i) => {
-          if (i !== 0 && i !== 8) {
-            data[i - 1] = day[habitTitle];
-          }
+          data[i] = day[habitTitle];
         })
         return data;
+      },
+      setWeek() {
+        this.week = days.map((days, i) => {
+          const newDate = new Date();
+          newDate.setMonth(this.startDate.getMonth());
+          newDate.setDate(this.startDate.getDate() + i);
+          return { date: newDate.getDate(), month: months[newDate.getMonth()] }
+        });
       }
     },
   }
@@ -117,19 +133,6 @@
     start.setDate(date.getDate() - date.getDay())
     return months[start.getMonth()];
   }
-
-  function getWeek(date) {
-    const start = new Date();
-    start.setDate(date.getDate() - date.getDay());
-
-    return days.map((days, i) => {
-      const newDate = new Date();
-      newDate.setMonth(start.getMonth());
-      newDate.setDate(start.getDate() + i);
-      return { date: newDate.getDate(), month: months[newDate.getMonth()] }
-    });
-  }
-
   function logDays() {
     const logDays = days.map((day, i) => {
       const d = (i + (date.getDate() - dayNumber + 1));
@@ -186,7 +189,7 @@
     border-bottom: 20px solid transparent;
     width: 0;
     height: 0;
-    transition: all 200ms ease;
+    transition: all 170ms ease;
     transform: translateY(150%)
   }
 
@@ -210,5 +213,4 @@
 </style>
 
 
-// WEBPACK FOOTER //
-// HabitList.vue
+// WEBPACK FOOTER // // HabitList.vue

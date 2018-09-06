@@ -5,7 +5,6 @@
         <div v-for="day in days" class="cell">
             <div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>
             <label class="container">
-    
                 <div v-if="connect(day,(day + 1))" class="connector"></div>
                 <input v-model="habitData[day]" @click="$emit('log-habit', day, title, habitData[day])" type="checkbox">
                 <div class="checkmark" :class="{ count: hasCount(day) }" >

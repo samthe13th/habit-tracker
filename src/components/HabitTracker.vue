@@ -3,10 +3,13 @@
     <div class="nav">
       <button class="tool-button" v-on:click="logout">Logout</button>
     </div>
-    <habit-list 
+    <habit-list
+      @change-week="changeWeek"
       @log-habit="logHabit"
+      :startDate="startDate"
       :dailyHabits="dailyHabits"
       :weeklyData="weeklyData"/>
+    <button v-on:click="loadWeek">Load Week</button>
     <button class="floating-action-button" v-on:click="newHabit">
       +
     </button>
@@ -35,17 +38,36 @@
       return {
         dailyHabits: [],
         weeklyData: [
-          {}, {}, {}, {}, {}, {}, {}, {}, {}
+          {}, {}, {}, {}, {}, {}, {},
         ],
-        habitData: {
-          name: '',
-        }
+        startDate: date,
       }
     },
     created() {
+      this.startDate = new Date();
+      this.startDate.setDate(date.getDate() - date.getDay());
+
       this.getDailyHabits();
     },
     methods: {
+      loadWeek() {
+        console.log('load')
+        this.setWeeklyData(this.dailyHabits, this.startDate)
+      },
+      changeWeek(_startDate, direction) {
+        console.log('change from: ', _startDate, _startDate.getFullYear())
+        this.startDate.setMonth(_startDate.getMonth());
+        this.startDate.setYear(_startDate.getFullYear());
+        if (direction === 'right') {
+          this.startDate.setDate(_startDate.getDate() + 7)
+        } else {
+          this.startDate.setDate(_startDate.getDate() - 7)
+        }
+
+        console.log('change to ', this.startDate, this.startDate.getFullYear())
+
+        this.setWeeklyData(this.dailyHabits, this.startDate);
+      },
       logout() {
         firebase.auth().signOut().then(() => {
           this.$router.replace('login');
@@ -61,7 +83,7 @@
             dailyHabits.push(doc.data())
           });
           this.dailyHabits = dailyHabits;
-          this.getWeeklyLog(this.dailyHabits);
+          this.setWeeklyData(this.dailyHabits, this.startDate);
         });
       },
       createHabit(newHabit) {
@@ -76,6 +98,7 @@
         this.getDailyHabits();
       },
       logHabit(habit, date, done, checked) {
+        console.log('log: ', habit, date, done, checked)
         const entry = {};
         entry[habit] = true;
 
@@ -87,11 +110,14 @@
           .doc(String(date.day))
           .set(entry, { merge: true })
       },
-      getWeeklyLog(habits) {
-        const range = this.getRange();
+      setWeeklyData(habits, _date) {
+        const range = this.getRange(_date);
         const weekData = {};
 
+        console.log('set data')
+
         range.forEach((_date, rangeId) => {
+          this.$set(this.weeklyData[rangeId], 'date', _date.getDate());
           db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`)
             .get().then(doc => {
               habits.forEach((habit) => {
@@ -109,14 +135,12 @@
             });
         });
       },
-      getRange() {
+      getRange(_date) {
         const range = [];
-        const start = new Date();
-        start.setDate(date.getDate() - date.getDay())
-        for (let i = -1; i < 8; i++) {
+        for (let i = 0; i < 7; i++) {
           const newDate = new Date();
-          newDate.setMonth(start.getMonth());
-          newDate.setDate(start.getDate() + i)
+          newDate.setMonth(_date.getMonth());
+          newDate.setDate(_date.getDate() + i)
           range.push(newDate)
         }
         return range;
