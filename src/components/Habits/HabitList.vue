@@ -5,21 +5,19 @@
     <h1>Daily Habits</h1>
 
     <div class="habit-log-header">
-
-      <div class="nav-btn nav-btn--left" @click="$emit('change-week', startDate, 'left')"></div>
-      <div v-for="(day, i) in weeklyData" class="cell">
-        <div style="height: 20px">
-          <div v-if="i === 0">{{ sundayMonth }}</div>
-          <div v-if="day.date === date && month !== sundayMonth">{{ month }}</div>
-        </div>
-        <div style="position: relative">
-          <div v-if="day.date === date" class="current-day-overlay"></div>
-          <h2>{{ days[i] }}</h2>
-          <div>{{ day.date }}</div>
-        </div>
-      </div>
-      <div class="nav-btn nav-btn--right" @click="$emit('change-week', startDate, 'right')">
-
+        <div class="nav-btn nav-btn--left" @click="$emit('change-week', startDate, 'left')"></div>
+          <div v-for="(day, i) in weeklyData" class="cell">
+            <div style="height: 20px">
+              <div v-if="i === 0">{{ sundayMonth }}</div>
+              <div v-if="day.date === date && month !== sundayMonth">{{ month }}</div>
+            </div>
+            <div style="position: relative">
+              <div v-if="day.date === date" class="current-day-overlay"></div>
+              <h2>{{ days[i] }}</h2>
+              <div>{{ day.date }}</div>
+            </div>
+          </div>
+        <div class="nav-btn nav-btn--right" @click="$emit('change-week', startDate, 'right')">
       </div>
     </div>
 
@@ -56,7 +54,7 @@
     },
     data() {
       return {
-        currentStreak: 30,
+        currentStreak: 0,
         sundayMonth,
         week: [{},{},{},{},{},{},{}],
         calendarYear: 2018,
@@ -83,35 +81,42 @@
     ],
     created() {
       this.setWeek();
-      console.log('startDate: ', this.startDate, this.startDate.getFullYear())
     },
     methods: {
       logHabit(day, title, checked) {
-        console.log('start date: ', this.startDate, this.startDate.getFullYear())
-        console.log('log ', day, title, checked)
+        console.log('LOG: ', day, title, checked)
         const logDate = new Date();
-        const entry = {};
 
         logDate.setYear(this.startDate.getFullYear())
         logDate.setMonth(this.startDate.getMonth())
         logDate.setDate(this.startDate.getDate() + day);
 
-        console.log("log date: ", logDate.getDate(), logDate.getMonth(), logDate.getFullYear())
-        entry[title] = !checked;
-
-        db.collection('log')
-          .doc(String(logDate.getFullYear()))
-          .collection('Months')
-          .doc(String(logDate.getMonth()))
-          .collection('Days')
-          .doc(String(logDate.getDate()))
-          .set(entry, { merge: true });
+        this.setStreak(logDate, title);
       },
-      setStreak(year, month, day, habit) {
-        const previousDay = db.doc(`log/${year}/Months/${month}/Days/${day}`);
+      setStreak(_date, habit) {
+        const prevDay = _.clone(_date);
+        prevDay.setDate(prevDay.getDate() - 1);
+
+        db.doc(`log/${prevDay.getFullYear()}/Months/${prevDay.getMonth()}/Days/${prevDay.getDate()}`)
+        .get().then((doc) => {
+          const entry = {};
+          entry[habit] = 1;
+
+          if (doc && doc.data() && doc.data()[habit] !== undefined) {
+             entry[habit] = doc.data()[habit] + 1;
+          } 
+
+          db.collection('log')
+          .doc(String(_date.getFullYear()))
+          .collection('Months')
+          .doc(String(_date.getMonth()))
+          .collection('Days')
+          .doc(String(_date.getDate()))
+          .set(entry, { merge: true });
+        });
       },
       getHabitData(habitTitle) {
-        let data = [false, false, false, false, false, false, false]
+        let data = [0, 0, 0, 0, 0, 0, 0]
         this.weeklyData.forEach((day, i) => {
           data[i] = day[habitTitle];
         })

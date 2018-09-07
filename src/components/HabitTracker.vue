@@ -9,7 +9,6 @@
       :startDate="startDate"
       :dailyHabits="dailyHabits"
       :weeklyData="weeklyData"/>
-    <button v-on:click="loadWeek">Load Week</button>
     <button class="floating-action-button" v-on:click="newHabit">
       +
     </button>
@@ -51,11 +50,9 @@
     },
     methods: {
       loadWeek() {
-        console.log('load')
         this.setWeeklyData(this.dailyHabits, this.startDate)
       },
       changeWeek(_startDate, direction) {
-        console.log('change from: ', _startDate, _startDate.getFullYear())
         this.startDate.setMonth(_startDate.getMonth());
         this.startDate.setYear(_startDate.getFullYear());
         if (direction === 'right') {
@@ -63,8 +60,6 @@
         } else {
           this.startDate.setDate(_startDate.getDate() - 7)
         }
-
-        console.log('change to ', this.startDate, this.startDate.getFullYear())
 
         this.setWeeklyData(this.dailyHabits, this.startDate);
       },
@@ -98,9 +93,8 @@
         this.getDailyHabits();
       },
       logHabit(habit, date, done, checked) {
-        console.log('log: ', habit, date, done, checked)
         const entry = {};
-        entry[habit] = true;
+        entry[habit] = 1;
 
         db.collection('log')
           .doc(String(date.year))
@@ -114,23 +108,22 @@
         const range = this.getRange(_date);
         const weekData = {};
 
-        console.log('set data')
-
         range.forEach((_date, rangeId) => {
           this.$set(this.weeklyData[rangeId], 'date', _date.getDate());
           db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`)
-            .get().then(doc => {
+            .get().then((doc) => {
               habits.forEach((habit) => {
                 if (!weekData[habit.title]) {
                   weekData[habit.title] = [];
                 }
-                let checked = false;
+                let checked = 0;
                 if (doc.exists) {
                   const data = doc.data();
-                  checked = doc.data()[habit.title] === true;
+                  checked = doc.data()[habit.title];
                 }
                 weekData[habit.title].push(checked);
                 this.$set(this.weeklyData[rangeId], habit.title, checked);
+                console.log('weekly data: ', this.weeklyData)
               })
             });
         });

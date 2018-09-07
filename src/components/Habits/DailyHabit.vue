@@ -1,17 +1,19 @@
 <template>
-    <div class="habit-bar">
+    <div class="habit-bar" :class="{ 'cell-private': !isPublic }">
         <div class="habit-title">{{title}}</div>
-        <button style="position: fixed; top: 10px; left: 10px" @click="update()">Update</button>
-        <div v-for="day in days" class="cell">
-            <div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>
+        <div v-for="day in days" class="cell" >
+            <!--<div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>-->
             <label class="container">
-                <div v-if="connect(day,(day + 1))" class="connector"></div>
-                <input v-model="habitData[day]" @click="$emit('log-habit', day, title, habitData[day])" type="checkbox">
+                <div v-if="connect(day, day + 1)" class="connector"></div>
+                <input v-model="marked[day]" @click="$emit('log-habit', day, title, habitData[day])" type="checkbox">
                 <div class="checkmark" :class="{ count: hasCount(day) }" >
-                    <span v-if="hasCount(day)">{{ streak(day) }}</span>
+                    <span v-if="hasCount(day)">{{ habitData[day] }}</span>
                 </div>
             </label>
         </div>
+        <button :class="{ 'half-opacity': isPublic }" class="privacy-btn" v-on:click="togglePrivacy">
+            <img src="../../assets/lock-96.png"/>
+        </button>
     </div>
 </template>
 
@@ -28,28 +30,50 @@
         name: 'DailyHabit',
         data() {
             return {
+                isPublic: true,
                 days,
-                habitData: [false, false, false, false, false, false, false],
+                habitData: [0,0,0,0,0,0,0],
+                marked: [false, false, false, false, false, false],
             }
         },
         props: [
-            'range',
             'title',
-            'checked',
             'currentStreak',
-            'logHabit',
             'habitDataRaw'
         ],
         watch: {
             habitDataRaw: function (newVal, oldVal) {
+                console.log('raw: ', newVal, oldVal)
                 this.updateHabitData(newVal);
+            }, 
+            marked: function(n,o) {
+                console.log('mark: ', n, o)
+                this.update(n);
             }
         },
         methods: {
+            togglePrivacy() {
+                this.isPublic = !this.isPublic;
+            },
             updateHabitData(updates) {
                 updates.forEach((flag, i) => {
-                    if (flag !== undefined) {
+                    if (flag !== undefined && flag !== 0) {
                         this.habitData.splice(i, 1, flag);
+                        this.marked.splice(i, 1, true);
+                        console.log(this.habitData)
+                    } else {
+                        this.marked.splice(i, 1, false)
+                    }
+                })
+            },
+            update(marks) {
+                marks.forEach((mark, i) => {
+                    if (mark === true && this.habitData !== undefined) {
+                        this.habitData[i] = (this.habitData[i - 1])
+                        ? this.habitData[i - 1] + 1
+                        : 1;
+                    } else {
+                        this.habitData[i] = 0;
                     }
                 })
             },
@@ -70,9 +94,6 @@
                 }
                 return count;
             },
-            update: function () {
-                this.habitData.splice(0, 1, true)
-            }
         },
     }
 
@@ -118,6 +139,39 @@
         line-height: 24px;
         text-align: center;
         color: white;
+    }
+
+    .cell-private {
+        background: #2c2e84;
+    }
+
+    .cell-private-2 {
+        background: #243f6f;
+    }
+
+    .privacy-btn {
+        position: absolute;
+        left: 100%;
+        margin-left: 10px;
+        height: 45px;
+        top: 0;
+        background: none;
+        display: flex;
+        opacity: 1;
+    }
+
+    .privacy-btn img {
+        height: 30px;
+    }
+
+
+    .half-opacity {
+        opacity: 0.3;
+        transition: opacity 100ms ease;
+    }
+
+    .half-opacity:hover {
+        opacity: 0.6;
     }
 
     .container:hover input~.checkmark {
