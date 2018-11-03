@@ -6,12 +6,12 @@
 
 <script>
 export default {
-  name: 'App', 
+  name: 'App',
   data: function() {
     return {
       showModal: false
     }
-  }
+  },
 }
 </script>
 

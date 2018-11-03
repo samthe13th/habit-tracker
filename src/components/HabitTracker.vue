@@ -3,12 +3,18 @@
     <div class="nav">
       <button class="tool-button" v-on:click="logout">Logout</button>
     </div>
+
     <habit-list
+      v-if="showWeek"
       @change-week="changeWeek"
       @log-habit="logHabit"
+      :inDate="inDate"
+      :outDate="outDate"
       :startDate="startDate"
+      :dateArray="dateArray"
       :dailyHabits="dailyHabits"
       :weeklyData="weeklyData"/>
+
     <button class="floating-action-button" v-on:click="newHabit">
       +
     </button>
@@ -21,7 +27,7 @@
 <script>
   import firebase from 'firebase'
   import * as _ from 'lodash'
-  import db from '@/db'
+  import { db } from '../main'
   import NewHabit from './Habits/NewHabit'
   import HabitList from './Habits/HabitList'
 
@@ -39,14 +45,26 @@
         weeklyData: [
           {}, {}, {}, {}, {}, {}, {},
         ],
+        incomingStreak: 0,
+        outgoingStreak: 0,
         startDate: date,
+        dateArray: [date,date,date,date,date,date,date],
+        inDate: date,
+        outDate: date,
+        showWeek: true,
+      }
+    },
+    firestore() {
+      console.log(db.collection('habits'));
+      return {
+        habits: db.collection('habits'),
       }
     },
     created() {
       this.startDate = new Date();
       this.startDate.setDate(date.getDate() - date.getDay());
-
       this.getDailyHabits();
+      this.setDateArray(this.startDate);
     },
     methods: {
       loadWeek() {
@@ -61,7 +79,30 @@
           this.startDate.setDate(_startDate.getDate() - 7)
         }
 
+        this.startDate = _.clone(this.startDate)
+
         this.setWeeklyData(this.dailyHabits, this.startDate);
+        this.incomingStreak = 100;
+
+        this.showWeek = false;
+        this.setDateArray(this.startDate);
+      },
+      setDateArray(_startDate) {
+
+        this.inDate = _.clone(_startDate);
+        this.inDate.setDate(_startDate.getDate() - 1);
+        this.outDate = _.clone(_startDate);
+        this.outDate.setDate(_startDate.getDate() + 7);
+
+        _.each( this.dateArray, ( d, i ) => {
+          const _date = _.clone( _startDate );
+          _date.setDate( _date.getDate() + i );
+          this.dateArray.splice( i, 1, _date )
+        } );
+
+        setTimeout(() => {
+          this.showWeek= true;
+        })
       },
       logout() {
         firebase.auth().signOut().then(() => {
@@ -123,8 +164,8 @@
                 }
                 weekData[habit.title].push(checked);
                 this.$set(this.weeklyData[rangeId], habit.title, checked);
-                console.log('weekly data: ', this.weeklyData)
               })
+              this.weeklyData = _.clone(this.weeklyData)
             });
         });
       },

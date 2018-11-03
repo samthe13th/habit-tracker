@@ -5,25 +5,60 @@
     <h1>Daily Habits</h1>
 
     <div class="habit-log-header">
-        <div class="nav-btn nav-btn--left" @click="$emit('change-week', startDate, 'left')"></div>
-          <div v-for="(day, i) in weeklyData" class="cell">
-            <div style="height: 20px">
-              <div v-if="i === 0">{{ sundayMonth }}</div>
-              <div v-if="day.date === date && month !== sundayMonth">{{ month }}</div>
-            </div>
-            <div style="position: relative">
-              <div v-if="day.date === date" class="current-day-overlay"></div>
-              <h2>{{ days[i] }}</h2>
-              <div>{{ day.date }}</div>
-            </div>
-          </div>
-        <div class="nav-btn nav-btn--right" @click="$emit('change-week', startDate, 'right')">
+
+      <div
+        class="nav-btn nav-btn--left"
+        @click="$emit('change-week', startDate, 'left')">
       </div>
+
+      <div v-for="(day, i) in dateArray" class="cell">
+
+        <div style="height: 20px">
+          <div v-if="i === 0">{{ months[ startDate.getMonth() ] }}</div>
+          <div v-if="day.getDate() === date && day.getMonth() !== startDate.getMonth()">
+            {{ months[ day.getMonth() ] }}
+          </div>
+        </div>
+
+        <div style="position: relative">
+          <div
+            v-if="day.getDate() === date && day.getMonth() !== startDate.getMonth()"
+            class="current-day-overlay">
+          </div>
+          <h2>{{ days[i].substring(0,2) }}</h2>
+          <div>{{ day.getDate() }}</div>
+        </div>
+
+      </div>
+
+      <div
+        class="nav-btn nav-btn--right"
+        @click="$emit('change-week', startDate, 'right')">
+      </div>
+
     </div>
 
-    <daily-habit class="habit-bar-wrapper" v-for="dailyHabit in dailyHabits" @log-habit="logHabit" :title="dailyHabit.title"
-      :habitDataRaw="getHabitData(dailyHabit.title)" :currentStreak="currentStreak">
+
+    <daily-habit
+      class="habit-bar-wrapper"
+      v-for="habit in dailyHabits"
+      v-bind:data="habit"
+      v-bind:key="habit.title"
+      @log-habit="logHabit"
+      :dateArray="dateArray"
+      :incomingDate="incomingDate"
+      :title="habit.title"
+      :habitDataRaw="getHabitData(habit.title)">
     </daily-habit>
+
+
+    <div>Su: {{ habitList.sunday }}</div>
+    <div>Mo: {{ habitList.monday }}</div>
+    <div>Tu: {{ habitList.tuesday }}</div>
+    <div>We: {{ habitList.wednesday }}</div>
+    <div>Th: {{ habitList.thursday }}</div>
+    <div>Fr: {{ habitList.friday }}</div>
+    <div>Sa: {{ habitList.saturday }}</div>
 
   </div>
 
@@ -32,11 +67,11 @@
 <script>
   import firebase from 'firebase'
   import * as _ from 'lodash'
-  import db from '@/db'
+  import { db } from '../../main'
 
   const date = new Date();
-  const days = ['Su', 'M', 'T', 'W', 'Th', 'F', 'S'];
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'Ocober', 'November', 'December']
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const monthNumber = date.getMonth();
   const dayNumber = date.getDay();
   const day = days[dayNumber];
@@ -54,9 +89,9 @@
     },
     data() {
       return {
-        currentStreak: 0,
+        incomingDate: this.getIncomingDate(),
         sundayMonth,
-        week: [{},{},{},{},{},{},{}],
+        week: [{}, {}, {}, {}, {}, {}, {}],
         calendarYear: 2018,
         months,
         days,
@@ -67,10 +102,21 @@
         logDays: logDays(),
         dayNumber,
         day,
-        days,
+        dayOne: this.dateArray[0],
         wakeUp: [],
-        habitData: {
-          name: '',
+        habitData: _.reduce(this.dailyHabits, (acc, h) => {
+          const habit = {};
+          habit[h] = [0,0,0,0,0,0,0];
+          return { ...acc, habit };
+        }, {}),
+        habitList: {
+          sunday: {},
+          monday: {},
+          tuesday: {},
+          wednesday: {},
+          thursday: {},
+          friday: {},
+          saturday: {},
         }
       }
     },
@@ -78,55 +124,123 @@
       'dailyHabits',
       'weeklyData',
       'startDate',
+      'dateArray',
+      'inDate',
+      'outDate',
     ],
+    firestore() {
+      return {
+        habits: db.collection('DailyHabits'),
+      }
+    },
     created() {
       this.setWeek();
+      this.setHabitData();
+    },
+    mounted() {
+      this.days.forEach((day, i) => {
+        this.$binding(day, db.doc(`log/${this.dateArray[i].getFullYear()}/Months/${this.dateArray[i].getMonth()}/Days/${this.dateArray[i].getDate()}`))
+          .then((monday) => {
+            this.habitList[day] = monday;
+          }).catch(err => {
+          this.habitList[day] = {};
+        })
+      });
+    },
+    watch: {
+      weeklyData: function(newVal, oldVal) {
+      },
+      startDate: function(newVal, oldVal) {
+        this.incomingDate = this.getIncomingDate();
+      },
     },
     methods: {
-      logHabit(day, title, checked) {
-        console.log('LOG: ', day, title, checked)
+      getHabitList() {
+        return this.habitList;
+      },
+      updateTest(_checked) {
+        const n = (_checked) ? 8 : 0;
+        this.test(n);
+      },
+      test(n) {
+        this.$firestore.sunday.update({ fasdfdf: n })
+        this.$firestore.sunday.get().then((doc) => {
+          this.dayOne = doc.data().fasdfdf;
+        })
+      },
+      getIncomingDate() {
+          const incomingDate = _.clone(this.startDate);
+          incomingDate.setDate(incomingDate.getDate() - 1);
+          return incomingDate;
+      },
+      logHabit(day, title, streak) {
+        console.log('log ', day, title, streak)
         const logDate = new Date();
 
-        logDate.setYear(this.startDate.getFullYear())
-        logDate.setMonth(this.startDate.getMonth())
+        logDate.setYear(this.startDate.getFullYear());
+        logDate.setMonth(this.startDate.getMonth());
         logDate.setDate(this.startDate.getDate() + day);
 
-        this.setStreak(logDate, title);
+        this.setStreak(logDate, title, streak);
       },
-      setStreak(_date, habit) {
+      setStreak(_date, habit, streak) {
         const prevDay = _.clone(_date);
         prevDay.setDate(prevDay.getDate() - 1);
 
         db.doc(`log/${prevDay.getFullYear()}/Months/${prevDay.getMonth()}/Days/${prevDay.getDate()}`)
-        .get().then((doc) => {
-          const entry = {};
-          entry[habit] = 1;
+          .get().then((doc) => {
+            const entry = {};
+            entry[habit] = streak;
 
-          if (doc && doc.data() && doc.data()[habit] !== undefined) {
-             entry[habit] = doc.data()[habit] + 1;
-          } 
-
-          db.collection('log')
-          .doc(String(_date.getFullYear()))
-          .collection('Months')
-          .doc(String(_date.getMonth()))
-          .collection('Days')
-          .doc(String(_date.getDate()))
-          .set(entry, { merge: true });
-        });
+            db.collection('log')
+              .doc(String(_date.getFullYear()))
+              .collection('Months')
+              .doc(String(_date.getMonth()))
+              .collection('Days')
+              .doc(String(_date.getDate()))
+              .set(entry, { merge: true });
+            this.adjustFutureStreak(_date, streak, habit);
+          });
+      },
+      adjustFutureStreak(_date, streak, habit) {
+        const nextDate = _.clone(_date);
+        const entry = {};
+        nextDate.setDate(nextDate.getDate() + 1);
+        const log = this.getDateDoc(nextDate)
+        log.get().then(doc => {
+          if (doc.data() && doc.data()[habit] && doc.data()[habit] !== 0) {
+            entry[habit] = streak + 1;
+            log.set(entry, { merge: true });
+            this.adjustFutureStreak(nextDate, streak + 1, habit);
+          }
+        })
+      },
+      getDateDoc(_date) {
+        const doc = db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`);
+        console.log(doc)
+        return doc;
       },
       getHabitData(habitTitle) {
         let data = [0, 0, 0, 0, 0, 0, 0]
         this.weeklyData.forEach((day, i) => {
-          data[i] = day[habitTitle];
-        })
+          data[i] = day[habitTitle] | 0;
+        });
+
         return data;
+      },
+      setHabitData() {
+/*        _.each(this.dailyHabits, (habit) => {
+            this.weeklyData.forEach((day, i) => {
+            this.habitData[habit][i] = day[this.habitTitle] | 0;
+          })
+        });*/
       },
       setWeek() {
         this.week = days.map((days, i) => {
           const newDate = new Date();
           newDate.setMonth(this.startDate.getMonth());
           newDate.setDate(this.startDate.getDate() + i);
+          this.incomingDate = this.getIncomingDate();
           return { date: newDate.getDate(), month: months[newDate.getMonth()] }
         });
       }
