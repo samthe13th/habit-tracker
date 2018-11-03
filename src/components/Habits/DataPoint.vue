@@ -1,6 +1,6 @@
 <template>
   <button @click="logHabit()">
-    {{ streak[name] }}
+      {{ streak[name] }}
   </button>
 </template>
 
@@ -37,28 +37,46 @@
     methods: {
       logHabit() {
         const entry = {};
-        if (this.$firestore.streak) {
-          this.$firestore.streak.get().then((snap) => {
+        const streak = db.doc(`log/${this.date.getFullYear()}/Months/${this.date.getMonth()}/Days/${this.date.getDate()}`);
+        streak.get().then((snap) => {
+          console.log('snap: ', snap.data())
+          if (snap.data()){
             if (snap.data()[this.name] && snap.data()[this.name] > 0) {
               entry[this.name] = 0;
               this.setCurrentStreak(entry)
             } else {
-              if (this.$firestore.prevStreak) {
-                this.addPreviousStreak(entry);
-              }
+              console.log( 'no snap data' )
+              const prevStreak = db.doc( `log/${this.prevDate.getFullYear()}/Months/${this.prevDate.getMonth()}/Days/${this.prevDate.getDate()}` );
+              prevStreak.get().then( ( snap ) => {
+                  if( snap.data() ) {
+                    console.log('GET PREV STREAK')
+                    this.addPreviousStreak( prevStreak, entry );
+                  } else {
+                    console.log('wut now tho')
+                  }
+                })
             }
-          })
-        } else {
-          entry[this.name] = 1;
-          this.setCurrentStreak(entry);
-          if (this.$firestore.prevStreak) {
-            this.addPreviousStreak(entry);
+          } else {
+            console.log('no streak')
+            entry[this.name] = 1;
+            setTimeout(() => {
+              const prevStreak = db.doc(`log/${this.prevDate.getFullYear()}/Months/${this.prevDate.getMonth()}/Days/${this.prevDate.getDate()}`);
+              prevStreak.get().then((snap) => {
+                if (snap.data()) {
+                  console.log('HERE')
+                  this.addPreviousStreak(prevStreak, entry);
+                } else {
+                  console.log('THERE')
+                  this.setCurrentStreak(entry);
+                }
+              })
+            })
           }
-        }
+        })
       },
-      addPreviousStreak(entry) {
+      addPreviousStreak(_prevStreak, entry) {
         entry[this.name] = 1;
-        this.$firestore.prevStreak
+        _prevStreak
           .get()
           .then( ( snapshot ) => {
             const prevStreak = snapshot.data()[ this.name ];
