@@ -1,34 +1,35 @@
 <template>
-  <div class="habit-bar" :class="{ 'cell-private': !isPublic }">
-
+  <div>
     <div class="habit-title">{{title}}</div>
+    <div class="habit-bar" :class="{ 'cell-private': !isPublic }">
 
-    <div v-for="day in dateArray" class="cell">
-      <data-point :name="title" :date="day" :prevDate="prevDate(day)"></data-point>
-<!--      <div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>
-      <label class="container">
-        <div v-if="connect(day, day + 1)" class="connector"></div>
-        <input v-model="marked[day]" @click="$emit('log-habit', day, title, streak(day))" type="checkbox">
-        <div class="checkmark" :class="{ count: hasCount(day) }">
-          <span v-if="hasCount(day)">{{ habitData[ day ] }}</span>
-        </div>
-      </label>-->
+      <div v-for="day in dateArray" class="cell">
+        <data-point :name="title" :date="day" :prevDate="prevDate(day)" :nextDate="nextDate(day)"></data-point>
+        <!--      <div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>
+              <label class="container">
+                <div v-if="connect(day, day + 1)" class="connector"></div>
+                <input v-model="marked[day]" @click="$emit('log-habit', day, title, streak(day))" type="checkbox">
+                <div class="checkmark" :class="{ count: hasCount(day) }">
+                  <span v-if="hasCount(day)">{{ habitData[ day ] }}</span>
+                </div>
+              </label>-->
+      </div>
+
+      <!--
+      <div v-for="day in dateArray" class="cell">
+        <label class="container">
+          <input @click="updateTest()" type="checkbox">
+          <div class="checkmark">
+          </div>
+        </label>
+      </div>
+      -->
+
+      <button :class="{ 'half-opacity': isPublic }" class="privacy-btn" v-on:click="togglePrivacy">
+        <img src="../../assets/lock-96.png" />
+      </button>
+
     </div>
-
-    <!--
-    <div v-for="day in dateArray" class="cell">
-      <label class="container">
-        <input @click="updateTest()" type="checkbox">
-        <div class="checkmark">
-        </div>
-      </label>
-    </div>
-    -->
-
-    <button :class="{ 'half-opacity': isPublic }" class="privacy-btn" v-on:click="togglePrivacy">
-      <img src="../../assets/lock-96.png" />
-    </button>
-
   </div>
 </template>
 
@@ -89,9 +90,14 @@
     },
     methods: {
       prevDate(_date) {
-        const newDate = _.clone(_date);
-        newDate.setDate(_date.getDate() - 1);
-        return newDate;
+        const prevDate = _.clone(_date);
+        prevDate.setDate(_date.getDate() - 1);
+        return prevDate;
+      },
+      nextDate(_date) {
+        const nextDate = _.clone(_date);
+        nextDate.setDate(_date.getDate() + 1);
+        return nextDate;
       },
       updateTest() {
         const entry = {};
@@ -183,6 +189,8 @@
     padding: 10px;
     justify-content: space-evenly;
     position: relative;
+    height: 45px;
+    overflow:hidden;
   }
 
   .container {
@@ -289,9 +297,11 @@
   }
 
   .habit-title {
+    line-height: 50px;
     font-size: 20px;
     position: absolute;
-    left: -20px;
+    padding-right: 10px;
+    left: -2px;
     transform: translateX(-100%);
   }
 </style>

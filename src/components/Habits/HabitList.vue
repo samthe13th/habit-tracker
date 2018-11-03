@@ -51,15 +51,6 @@
       :habitDataRaw="getHabitData(habit.title)">
     </daily-habit>
 
-
-    <div>Su: {{ habitList.sunday }}</div>
-    <div>Mo: {{ habitList.monday }}</div>
-    <div>Tu: {{ habitList.tuesday }}</div>
-    <div>We: {{ habitList.wednesday }}</div>
-    <div>Th: {{ habitList.thursday }}</div>
-    <div>Fr: {{ habitList.friday }}</div>
-    <div>Sa: {{ habitList.saturday }}</div>
-
   </div>
 
 </template>
@@ -289,6 +280,7 @@
     border: solid 1px #2196F3;
     border-radius: 6px;
     margin: 5px;
+    position: relative;
   }
 
   .current-day-overlay {
