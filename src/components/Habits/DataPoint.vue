@@ -37,29 +37,37 @@
     methods: {
       logHabit() {
         const entry = {};
-
         if (this.$firestore.streak) {
           this.$firestore.streak.get().then((snap) => {
             if (snap.data()[this.name] && snap.data()[this.name] > 0) {
               entry[this.name] = 0;
               this.setCurrentStreak(entry)
             } else {
-              entry[this.name] = 1;
               if (this.$firestore.prevStreak) {
-                this.$firestore.prevStreak
-                  .get()
-                  .then( ( snapshot ) => {
-                    const prevStreak = snapshot.data()[ this.name ];
-                    if( prevStreak && prevStreak > 0 ) {
-                      entry[ this.name ] = prevStreak + 1;
-                    }
-                  }).then(() => {
-                  this.setCurrentStreak(entry);
-                })
+                this.addPreviousStreak(entry);
               }
             }
           })
+        } else {
+          entry[this.name] = 1;
+          this.setCurrentStreak(entry);
+          if (this.$firestore.prevStreak) {
+            this.addPreviousStreak(entry);
+          }
         }
+      },
+      addPreviousStreak(entry) {
+        entry[this.name] = 1;
+        this.$firestore.prevStreak
+          .get()
+          .then( ( snapshot ) => {
+            const prevStreak = snapshot.data()[ this.name ];
+            if( prevStreak && prevStreak > 0 ) {
+              entry[ this.name ] = prevStreak + 1;
+            }
+          }).then(() => {
+          this.setCurrentStreak(entry);
+        })
       },
       setCurrentStreak(entry) {
         this.$firestore.days.doc(this.date.getDate().toString())
