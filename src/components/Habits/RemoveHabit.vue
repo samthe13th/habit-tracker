@@ -1,24 +1,9 @@
 <template>
   <div class="custom-modal">
-    <h3>New Habit</h3>
-    <input v-model="habit.title" class="text-input" type="text" placeholder="Title for habit">
-    <h3>Period</h3>
-    <div class="radio-buttons">
-      <label class="container">Daily
-        <input value="daily" v-model="habit.period" type="radio" checked="checked" name="radio">
-        <span class="checkmark"></span>
-      </label>
-      <label class="container">Weekly
-        <input value="weekly" v-model="habit.period"  type="radio" name="radio">
-        <span class="checkmark"></span>
-      </label>
-      <label class="container">Monthly
-        <input value="monthly" v-model="habit.period"  type="radio" name="radio">
-        <span class="checkmark"></span>
-      </label>
-    </div>
-    <br>
-    <button class="action-button" @click="$emit('create-habit', habit)">Start Habit</button>
+    <h3>Delete Habit</h3>
+    <h5>Warning! This action cannot be undone. Are you sure you want to delete this habit?</h5>
+    <button class="action-button" @click="$emit('delete-habit', true)">Yes</button>
+    <button class="action-button" @click="$emit('delete-habit', false)">No</button>
   </div>
 </template>
 
@@ -26,19 +11,9 @@
   import Vue from 'vue'
   export default {
     props: [
-      'habitData',
-      'createHabit',
-      'data'
     ],
     data() {
       return {
-        habit: {
-          title: '',
-          period: '',
-        },
-        a: {
-          b: 'abc'
-        }
       }
     },
   }

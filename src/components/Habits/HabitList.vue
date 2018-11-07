@@ -39,17 +39,36 @@
     </div>
 
 
-    <daily-habit
-      class="habit-bar-wrapper"
-      v-for="habit in dailyHabits"
-      v-bind:data="habit"
-      v-bind:key="habit.title"
-      @log-habit="logHabit"
-      :dateArray="dateArray"
-      :incomingDate="incomingDate"
-      :title="habit.title"
-      :habitDataRaw="getHabitData(habit.title)">
-    </daily-habit>
+    <template v-for="habit in habits">
+      <div style="position: relative; margin: 5px">
+        <!-- habit bar -->
+        <habit-bar
+          class="habit-bar-wrapper"
+          v-bind:data="habit"
+          v-bind:key="habit.title"
+          @log-habit="logHabit"
+          @delete-habit="deleteHabit"
+          :dateArray="dateArray"
+          :incomingDate="incomingDate"
+          :title="habit.title"
+          :habitDataRaw="getHabitData(habit.title)">
+        </habit-bar>
+
+        <!-- buttons -->
+        <div class="habit-buttons">
+          <button class="privacy-btn">
+            <img src="../../assets/lock-96.png" />
+          </button>
+          <button class="delete-btn" v-on:click="deleteHabit(habit.title)">
+            Delete
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <modal name="delete-habit-modal" :width="400" :height="400">
+      <remove-habit @delete-habit="deleteHabit" />
+    </modal>
 
   </div>
 
@@ -71,12 +90,14 @@
   const sundayMonth = displayedMonths();
 
   import Vue from 'vue'
-  import DailyHabit from './DailyHabit'
+  import HabitBar from './HabitBar'
+  import RemoveHabit from './RemoveHabit'
 
   export default {
     name: 'HabitList',
     components: {
-      DailyHabit,
+      HabitBar,
+      RemoveHabit,
     },
     data() {
       return {
@@ -126,7 +147,6 @@
     },
     created() {
       this.setWeek();
-      this.setHabitData();
     },
     mounted() {
       this.days.forEach((day, i) => {
@@ -146,6 +166,22 @@
       },
     },
     methods: {
+      deleteHabit(title) {
+        this.$modal.show('delete-habit-modal');
+
+/*        this.$firestore.habits
+          .where("title", "==", title)
+          .get()
+          .then((snap) => {
+            var batch = db.batch();
+
+            snap.forEach((doc) => {
+              batch.delete(doc.ref);
+            });
+
+            batch.commit();
+          })*/
+      },
       getHabitList() {
         return this.habitList;
       },
@@ -219,13 +255,6 @@
 
         return data;
       },
-      setHabitData() {
-/*        _.each(this.dailyHabits, (habit) => {
-            this.weeklyData.forEach((day, i) => {
-            this.habitData[habit][i] = day[this.habitTitle] | 0;
-          })
-        });*/
-      },
       setWeek() {
         this.week = days.map((days, i) => {
           const newDate = new Date();
@@ -279,7 +308,6 @@
   .habit-bar-wrapper {
     border: solid 1px #2196F3;
     border-radius: 6px;
-    margin: 5px;
     position: relative;
   }
 
@@ -320,6 +348,41 @@
 
   .nav-btn--right:hover {
     border-left-color: black;
+  }
+
+  .privacy-btn {
+    margin-left: 5px;
+    height: 45px;
+    top: 0;
+    background: none;
+    display: flex;
+    opacity: 1;
+  }
+
+  .delete-btn {
+    margin-left: 5px;
+    height: 30px;
+    border-radius: 8px;
+    top: 0;
+    background: tomato;
+    display: flex;
+    opacity: 1;
+  }
+
+  .delete-btn:hover {
+    background: #c31919;
+  }
+
+  .privacy-btn img {
+    height: 30px;
+  }
+
+  .habit-buttons {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    align-items: center;
   }
 </style>
 

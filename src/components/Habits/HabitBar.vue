@@ -2,34 +2,11 @@
   <div>
     <div class="habit-title">{{title}}</div>
     <div class="habit-bar" :class="{ 'cell-private': !isPublic }">
-
       <div v-for="day in dateArray" class="cell">
         <data-point :name="title" :date="day" :prevDate="prevDate(day)" :nextDate="nextDate(day)"></data-point>
-        <!--      <div :class="{ connectorstart: (habitData[0] && (day === 0) && (currentStreak !== 0)) }"></div>
-              <label class="container">
-                <div v-if="connect(day, day + 1)" class="connector"></div>
-                <input v-model="marked[day]" @click="$emit('log-habit', day, title, streak(day))" type="checkbox">
-                <div class="checkmark" :class="{ count: hasCount(day) }">
-                  <span v-if="hasCount(day)">{{ habitData[ day ] }}</span>
-                </div>
-              </label>-->
       </div>
-
-      <!--
-      <div v-for="day in dateArray" class="cell">
-        <label class="container">
-          <input @click="updateTest()" type="checkbox">
-          <div class="checkmark">
-          </div>
-        </label>
-      </div>
-      -->
-
-      <button :class="{ 'half-opacity': isPublic }" class="privacy-btn" v-on:click="togglePrivacy">
-        <img src="../../assets/lock-96.png" />
-      </button>
-
     </div>
+
   </div>
 </template>
 
@@ -44,7 +21,7 @@
   const date = new Date();
 
   export default {
-    name:    'DailyHabit',
+    name:    'HabitBar',
     components: {
       DataPoint
     },
@@ -65,6 +42,7 @@
       'outgoingDate',
       'dayOne',
       'dateArray',
+      'deleteHabit'
     ],
     watch:   {
       habitDataRaw: function(newVal, oldVal) {
@@ -193,6 +171,14 @@
     overflow:hidden;
   }
 
+  .habit-buttons {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    align-items: center;
+  }
+
   .container {
     position: relative;
     cursor: pointer;
@@ -231,14 +217,26 @@
   }
 
   .privacy-btn {
-    position: absolute;
-    left: 100%;
-    margin-left: 10px;
+    margin-left: 5px;
     height: 45px;
     top: 0;
     background: none;
     display: flex;
     opacity: 1;
+  }
+
+  .delete-btn {
+    margin-left: 5px;
+    height: 30px;
+    border-radius: 8px;
+    top: 0;
+    background: tomato;
+    display: flex;
+    opacity: 1;
+  }
+
+  .delete-btn:hover {
+    background: #c31919;
   }
 
   .privacy-btn img {

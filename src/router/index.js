@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Habits from '@/components/HabitTracker'
 import Login from '@/components/Login'
 import SignUp from '@/components/SignUp'
+import Dashboard from '@/components/Dashboard'
 
 Vue.use(Router)
 
@@ -17,7 +18,12 @@ export default new Router({
       redirect: '/login'
     },
     {
-      path: '/home',
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: Dashboard,
+    },
+    {
+      path: '/habits',
       name: 'HabitTracker',
       component: Habits,
     }, 

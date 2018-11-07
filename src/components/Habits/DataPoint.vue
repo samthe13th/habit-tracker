@@ -2,24 +2,26 @@
 
   <div style="position: relative">
 
-    <button @click="logHabit()" v-if="!streak || streak[name] === 0" class="point point--sm"></button>
+    <button @click="logHabit()" v-if="streak[name] === undefined || streak[name] === 0" class="point point--sm"></button>
 
-    <template v-if="streak && streak[name] !== 0">
+    <template v-if="streak[name] !== undefined && streak[name] !== 0">
 
       <div v-if="prevStreak && prevStreak[name] > 0" class="streak-bar"></div>
+
       <div v-if="date.getDay() === 6 && nextStreak && nextStreak[name] > 0" class="streak-bar--end"></div>
 
       <button
-        v-if="nextStreak && nextStreak[name] === 0"
+        v-if="nextStreak && (nextStreak[name] === 0 || nextStreak[name] === undefined)"
         @click="logHabit()"
         class="point point--lg point--marked">
           {{ streak[name] }}
       </button>
 
       <button
-        v-if="nextStreak && nextStreak[name] !== 0"
+        v-if="nextStreak && (nextStreak[name] !== 0 && nextStreak[name] !== undefined)"
         @click="logHabit()"
         class="point point--sm point--marked">
+
       </button>
 
     </template>
@@ -63,8 +65,8 @@
         streak.get().then((snap) => {
           console.log('snap: ', snap.data())
           if (snap.data()){
+            entry[this.name] = 0;
             if (snap.data()[this.name] && snap.data()[this.name] > 0) {
-              entry[this.name] = 0;
               this.setCurrentStreak(entry)
             } else {
               console.log( 'no snap data' )
@@ -74,7 +76,9 @@
                     console.log('GET PREV STREAK')
                     this.addPreviousStreak( prevStreak, entry );
                   } else {
-                    console.log('wut now tho')
+                    console.log('wut now tho ', entry);
+                    entry[this.name] = 1;
+                    this.setCurrentStreak(entry)
                   }
                 })
             }
@@ -138,132 +142,21 @@
 </script>
 
 <style scoped>
-  .cell {
-    width: 80px;
-  }
-
-  .habit-bar {
-    display: flex;
-    flex-direction: row;
-    padding: 10px;
-    justify-content: space-evenly;
-    position: relative;
-  }
-
-  .container {
-    position: relative;
-    cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-
   .container input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
   }
 
-  .checkmark {
-    transition: width 200ms;
-    position: absolute;
-    top: 50%;
-    left: 20px;
-    transform: translate(-50%, -50%);
-    height: 24px;
-    width: 24px;
-    background-color: #eee;
-    line-height: 24px;
-    text-align: center;
-    color: white;
-  }
-
-  .cell-private {
-    background: #2c2e84;
-  }
-
-  .cell-private-2 {
-    background: #243f6f;
-  }
-
-  .privacy-btn {
-    position: absolute;
-    left: 100%;
-    margin-left: 10px;
-    height: 45px;
-    top: 0;
-    background: none;
-    display: flex;
-    opacity: 1;
-  }
 
   .privacy-btn img {
     height: 30px;
   }
 
-  .half-opacity {
-    opacity: 0.3;
-    transition: opacity 100ms ease;
-  }
-
-  .half-opacity:hover {
-    opacity: 0.6;
-  }
-
-  .container:hover input ~ .checkmark {
-    background-color: #ccc;
-  }
-
-  .container input:checked ~ .checkmark {
-    background-color: #2196F3;
-  }
-
-  .connector {
-    display: block;
-    content: '';
-    position: absolute;
-    width: 97px;
-    height: 24px;
-    top: -1px;
-    left: 18px;
-    background-color: #2196F3;
-    opacity: 0.6;
-  }
-
-  .connectorstart {
-    display: block;
-    content: '';
-    position: absolute;
-    background-color: #2196F3;
-    opacity: 0.6;
-    width: 60px;
-    height: 24px;
-    left: 0;
-  }
-
-  .container .checkmark:after {
-    background: none;
-  }
-
-  .count {
-    width: 36px;
-    height: 36px;
-    line-height: 39px;
-    font-size: 18px;
-  }
-
-  .habit-title {
-    font-size: 20px;
-    position: absolute;
-    left: -20px;
-    transform: translateX(-100%);
-  }
-
   .point {
     border-radius: 100%;
     background: lightgrey;
-    transition: all 150ms ease-in-out;
+    transition: all 80ms ease-in-out;
     line-height: 30px;
     transform: translateX(-50%);
     position: absolute;
@@ -279,7 +172,8 @@
     height: 36px;
     width: 36px;
     transform: translate(-50%, -6px);
-    font-size: 16px;
+    font-size: 15px;
+    padding: 0;
     line-height: 36px;
   }
 
