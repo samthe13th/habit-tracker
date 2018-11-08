@@ -47,7 +47,6 @@
           v-bind:data="habit"
           v-bind:key="habit.title"
           @log-habit="logHabit"
-          @delete-habit="deleteHabit"
           :dateArray="dateArray"
           :incomingDate="incomingDate"
           :title="habit.title"
@@ -59,7 +58,7 @@
           <button class="privacy-btn">
             <img src="../../assets/lock-96.png" />
           </button>
-          <button class="delete-btn" v-on:click="deleteHabit(habit.title)">
+          <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
             Delete
           </button>
         </div>
@@ -115,6 +114,7 @@
         dayNumber,
         day,
         dayOne: this.dateArray[0],
+        habitToDelete: '',
         wakeUp: [],
         habitData: _.reduce(this.dailyHabits, (acc, h) => {
           const habit = {};
@@ -166,11 +166,14 @@
       },
     },
     methods: {
-      deleteHabit(title) {
+      openDeleteDialog(title) {
+        this.habitToDelete = title;
         this.$modal.show('delete-habit-modal');
-
-/*        this.$firestore.habits
-          .where("title", "==", title)
+      },
+      deleteHabit(followThrough) {
+        if (followThrough) {
+        this.$firestore.habits
+          .where("title", "==", this.habitToDelete)
           .get()
           .then((snap) => {
             var batch = db.batch();
@@ -180,7 +183,9 @@
             });
 
             batch.commit();
-          })*/
+          })
+        }
+        this.$modal.hide('delete-habit-modal');
       },
       getHabitList() {
         return this.habitList;

@@ -2,16 +2,16 @@
   <div class="custom-modal">
     <h3>Delete Habit</h3>
     <h5>Warning! This action cannot be undone. Are you sure you want to delete this habit?</h5>
-    <button class="action-button" @click="$emit('delete-habit', true)">Yes</button>
-    <button class="action-button" @click="$emit('delete-habit', false)">No</button>
+    <div class="button-row">
+      <button class="action-button" @click="$emit('delete-habit', true)">Yes</button>
+      <button class="action-button" @click="$emit('delete-habit', false)">No</button>
+    </div>
   </div>
 </template>
 
 <script>
   import Vue from 'vue'
   export default {
-    props: [
-    ],
     data() {
       return {
       }
@@ -21,6 +21,12 @@
 </script>
 
 <style>
+
+  .button-row {
+    display: flex;
+    justify-content: space-around;
+  }
+
   .custom-modal {
     display: flex;
     flex-direction: column;

@@ -8,10 +8,12 @@
             <div class="module-card" id="list-card--disabled">
                 <img src="../assets/lifer_icons--list.png"></img>
                 <div>Lists</div>
+                <div class="in-development">In Development</div>
             </div>
             <div class="module-card" id="goal-card--disabled">
                 <img src="../assets/lifer_icons--goal.png"></img>
                 <div>Goals</div>
+                <div class="in-development">In Development</div>
             </div>
         </div>
     </div>
@@ -46,6 +48,7 @@
     }
 
     .module-card {
+        position: relative;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -57,6 +60,15 @@
         font-size: 28px;
         color: white;
         font-weight: 800;
+    }
+
+    .in-development {
+        position: absolute;
+        bottom: 0; 
+        right: -20%;
+        transform: rotate(-30deg);
+        background: tomato;
+        padding: 10px;
     }
 
     .module-card--disabled {

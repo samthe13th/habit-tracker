@@ -2,21 +2,6 @@
   <div class="custom-modal">
     <h3>New Habit</h3>
     <input v-model="habit.title" class="text-input" type="text" placeholder="Title for habit">
-    <h3>Period</h3>
-    <div class="radio-buttons">
-      <label class="container">Daily
-        <input value="daily" v-model="habit.period" type="radio" checked="checked" name="radio">
-        <span class="checkmark"></span>
-      </label>
-      <label class="container">Weekly
-        <input value="weekly" v-model="habit.period"  type="radio" name="radio">
-        <span class="checkmark"></span>
-      </label>
-      <label class="container">Monthly
-        <input value="monthly" v-model="habit.period"  type="radio" name="radio">
-        <span class="checkmark"></span>
-      </label>
-    </div>
     <br>
     <button class="action-button" @click="$emit('create-habit', habit)">Start Habit</button>
   </div>
@@ -34,7 +19,7 @@
       return {
         habit: {
           title: '',
-          period: '',
+          period: 'daily',
         },
         a: {
           b: 'abc'
