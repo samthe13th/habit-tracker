@@ -1,6 +1,6 @@
 <template>
   <div class="custom-modal">
-    <h3>Delete Habit</h3>
+    <h2 class="modal-header">Delete Habit</h2>
     <h5>Warning! This action cannot be undone. Are you sure you want to delete this habit?</h5>
     <div class="button-row">
       <button class="action-button" @click="$emit('delete-habit', true)">Yes</button>
@@ -17,14 +17,15 @@
       }
     },
   }
-
 </script>
 
 <style>
 
   .button-row {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    margin-top: 30px;
+    width: 100%;
   }
 
   .custom-modal {
@@ -38,6 +39,12 @@
 
   .custom-modal h3 {
     align-self: center;
+    text-align: center;
+  }
+
+  .custom-modal h2 {
+    margin-top: 20px;
+    margin-bottom: 30px;
     text-align: center;
   }
 

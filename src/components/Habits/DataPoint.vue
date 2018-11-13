@@ -2,30 +2,32 @@
 
   <div style="position: relative">
 
-    <button @click="logHabit()" v-if="streak[name] === undefined || streak[name] === 0" class="point point--sm"></button>
-
-    <template v-if="streak[name] !== undefined && streak[name] !== 0">
-
-      <div v-if="prevStreak && prevStreak[name] > 0" class="streak-bar"></div>
-
-      <div v-if="date.getDay() === 6 && nextStreak && nextStreak[name] > 0" class="streak-bar--end"></div>
-
-      <button
-        v-if="nextStreak && (nextStreak[name] === 0 || nextStreak[name] === undefined)"
+    <template v-if="log">
+      <button 
         @click="logHabit()"
-        class="point point--lg point--marked">
-          {{ streak[name] }}
+        v-bind:class="{
+          'point--sm': nextLog[nextDate.getDate()] || !log[date.getDate()],
+          'point--lg': !nextLog[nextDate.getDate()] && log[date.getDate()],
+          'point--marked': log[date.getDate()],
+        }"
+        class="point">
+        <template v-if="!nextLog[nextDate.getDate()] && log[date.getDate()]">
+          {{ log[date.getDate()] }}
+        </template>
       </button>
 
-      <button
-        v-if="nextStreak && (nextStreak[name] !== 0 && nextStreak[name] !== undefined)"
-        @click="logHabit()"
-        class="point point--sm point--marked">
+      <template v-if="log[date.getDate()]">
+        <div 
+          v-if="prevLog && prevLog[prevDate.getDate()]" 
+          class="streak-bar">
+        </div>
 
-      </button>
-
+        <div 
+          v-if="date.getDay() === 6 && nextLog[nextDate.getDate()]"
+          class="streak-bar--end">
+        </div>
+      </template>
     </template>
-
   </div>
 
 </template>
@@ -39,8 +41,7 @@
   export default {
     name: 'DataPoint',
     props: [
-      'day',
-      'name',
+      'id',
       'date',
       'prevDate',
       'nextDate'
@@ -52,107 +53,80 @@
     },
     firestore() {
       return {
-        nextStreak: db.doc(`log/${this.nextDate.getFullYear()}/Months/${this.nextDate.getMonth()}/Days/${this.nextDate.getDate()}`),
-        prevStreak: db.doc(`log/${this.prevDate.getFullYear()}/Months/${this.prevDate.getMonth()}/Days/${this.prevDate.getDate()}`),
-        streak: db.doc(`log/${this.date.getFullYear()}/Months/${this.date.getMonth()}/Days/${this.date.getDate()}`),
-        days: db.collection(`log/${this.date.getFullYear()}/Months/${this.date.getMonth()}/Days`),
+        prevLog: db.doc(`DailyHabits/${this.id}/log/${this.prevDate.getFullYear()}_${this.prevDate.getMonth()}`),
+        nextLog: db.doc(`DailyHabits/${this.id}/log/${this.nextDate.getFullYear()}_${this.nextDate.getMonth()}`),
+        log: db.doc(`DailyHabits/${this.id}/log/${this.date.getFullYear()}_${this.date.getMonth()}`),
       }
     },
     methods: {
       logHabit() {
-        const entry = {};
-        const streak = db.doc(`log/${this.date.getFullYear()}/Months/${this.date.getMonth()}/Days/${this.date.getDate()}`);
+        const day = `${this.date.getDate()}`;
+        const prevDate = _.clone(this.date);
+        prevDate.setDate(this.date.getDate() - 1);
+        const streak = db.doc(`DailyHabits/${this.id}/log/${this.date.getFullYear()}_${this.date.getMonth()}`);
+        const entry0 = {};
         streak.get().then((snap) => {
-          console.log('snap: ', snap.data())
-          if (snap.data()){
-            entry[this.name] = 0;
-            if (snap.data()[this.name] && snap.data()[this.name] > 0) {
-              this.setCurrentStreak(entry)
+          if (snap.data()) {
+            entry0[day] = 0;
+            if (snap.data()[day]) {
+              this.setCurrentStreak(entry0, day);
             } else {
-              console.log( 'no snap data' )
-              const prevStreak = db.doc( `log/${this.prevDate.getFullYear()}/Months/${this.prevDate.getMonth()}/Days/${this.prevDate.getDate()}` );
-              prevStreak.get().then( ( snap ) => {
-                  if( snap.data() ) {
-                    console.log('GET PREV STREAK')
-                    this.addPreviousStreak( prevStreak, entry );
-                  } else {
-                    console.log('wut now tho ', entry);
-                    entry[this.name] = 1;
-                    this.setCurrentStreak(entry)
-                  }
-                })
-            }
-          } else {
-            console.log('no streak')
-            entry[this.name] = 1;
-            setTimeout(() => {
-              const prevStreak = db.doc(`log/${this.prevDate.getFullYear()}/Months/${this.prevDate.getMonth()}/Days/${this.prevDate.getDate()}`);
+              const prevStreak = db.doc(`DailyHabits/${this.id}/log/${prevDate.getFullYear()}_${prevDate.getMonth()}`);
               prevStreak.get().then((snap) => {
-                if (snap.data()) {
-                  console.log('HERE')
-                  this.addPreviousStreak(prevStreak, entry);
+                if (snap.data()[prevDate.getDate()]) {
+                  this.addPreviousStreak(prevStreak, entry0, prevDate.getDate().toString(), day)
                 } else {
-                  console.log('THERE')
-                  this.setCurrentStreak(entry);
+                  entry0[day] = 1;
+                  this.setCurrentStreak(entry0, day);
                 }
               })
-            })
+            }
           }
         })
       },
-      addPreviousStreak(_prevStreak, entry) {
-        entry[this.name] = 1;
+      setCurrentStreak(entry, day) {
+        this.$firestore.log.update(entry);
+        setTimeout(() => {
+          this.adjustFutureStreak(entry, this.date, entry[day])
+        })
+      },
+      addPreviousStreak(_prevStreak, entry, prevDay, day) {
+        entry[day] = 1;
         _prevStreak
           .get()
-          .then( ( snapshot ) => {
-            const prevStreak = snapshot.data()[ this.name ];
-            if( prevStreak && prevStreak > 0 ) {
-              entry[ this.name ] = prevStreak + 1;
+          .then((snapshot) => {
+            const prevStreak = snapshot.data()[prevDay];
+            if (prevStreak && prevStreak > 0) {
+              entry[day] = prevStreak + 1;
             }
           }).then(() => {
-          this.setCurrentStreak(entry);
-        })
+            this.setCurrentStreak(entry, this.date.getDate().toString());
+          })
       },
-      setCurrentStreak(entry) {
-        this.$firestore.days.doc(this.date.getDate().toString())
-          .set(entry, { merge: true});
-        setTimeout(() => {
-          this.adjustFutureStreak(this.date, entry[this.name], this.name);
-        })
-      },
-      adjustFutureStreak(_date, streak, habit) {
-        const nextDate = _.clone(_date);
-        const entry = {};
+      adjustFutureStreak(entry, date, streak) {
+        const nextDate = _.clone(date);
         nextDate.setDate(nextDate.getDate() + 1);
-        const log = this.getDateDoc(nextDate);
-        log.get().then(doc => {
-          if (doc.data() && doc.data()[habit] && doc.data()[habit] !== 0) {
-            entry[habit] = streak + 1;
-            log.set(entry, { merge: true });
-            this.adjustFutureStreak(nextDate, streak + 1, habit);
+        const day = nextDate.getDate();
+
+        const log = this.getMonthLog(nextDate);;
+        log.get().then((doc) => {
+          if (doc.data() && doc.data()[day]) {
+            entry[day] = streak + 1;
+            log.update(entry);
+            this.adjustFutureStreak(entry, nextDate, entry[day]);
           }
         })
       },
-      getDateDoc(_date) {
-        const doc = db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`);
+      getMonthLog(_date) {
+        const doc = db.doc(`DailyHabits/${this.id}/log/${_date.getFullYear()}_${_date.getMonth()}`);
         return doc;
       },
     }
   }
+
 </script>
 
 <style scoped>
-  .container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-
-  .privacy-btn img {
-    height: 30px;
-  }
-
   .point {
     border-radius: 100%;
     background: lightgrey;

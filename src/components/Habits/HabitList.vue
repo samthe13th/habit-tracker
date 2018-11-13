@@ -41,27 +41,25 @@
 
     <template v-for="habit in habits">
       <div style="position: relative; margin: 5px">
+
         <!-- habit bar -->
         <habit-bar
           class="habit-bar-wrapper"
-          v-bind:data="habit"
-          v-bind:key="habit.title"
-          @log-habit="logHabit"
           :dateArray="dateArray"
-          :incomingDate="incomingDate"
           :title="habit.title"
-          :habitDataRaw="getHabitData(habit.title)">
+          :id="habit.id">
         </habit-bar>
 
         <!-- buttons -->
         <div class="habit-buttons">
-          <button class="privacy-btn">
+          <button class="privacy-btn" v-on:click="togglePrivacy(habit.id)">
             <img src="../../assets/lock-96.png" />
           </button>
           <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
             Delete
           </button>
         </div>
+
       </div>
     </template>
 
@@ -77,20 +75,16 @@
   import firebase from 'firebase'
   import * as _ from 'lodash'
   import { db } from '../../main'
+  import Vue from 'vue'
+  import HabitBar from './HabitBar'
+  import RemoveHabit from './RemoveHabit'
 
   const date = new Date();
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  const monthNumber = date.getMonth();
   const dayNumber = date.getDay();
   const day = days[dayNumber];
-  const fullYear = date.getFullYear();
-  const month = months[date.getMonth()];
   const sundayMonth = displayedMonths();
-
-  import Vue from 'vue'
-  import HabitBar from './HabitBar'
-  import RemoveHabit from './RemoveHabit'
 
   export default {
     name: 'HabitList',
@@ -100,70 +94,24 @@
     },
     data() {
       return {
-        incomingDate: this.getIncomingDate(),
         sundayMonth,
-        week: [{}, {}, {}, {}, {}, {}, {}],
-        calendarYear: 2018,
         months,
         days,
-        month,
-        fullYear,
-        dateObject: date,
         date: date.getDate(),
-        logDays: logDays(),
         dayNumber,
         day,
-        dayOne: this.dateArray[0],
         habitToDelete: '',
-        wakeUp: [],
-        habitData: _.reduce(this.dailyHabits, (acc, h) => {
-          const habit = {};
-          habit[h] = [0,0,0,0,0,0,0];
-          return { ...acc, habit };
-        }, {}),
-        habitList: {
-          sunday: {},
-          monday: {},
-          tuesday: {},
-          wednesday: {},
-          thursday: {},
-          friday: {},
-          saturday: {},
-        }
       }
     },
     props: [
       'dailyHabits',
-      'weeklyData',
       'startDate',
       'dateArray',
-      'inDate',
-      'outDate',
     ],
     firestore() {
       return {
         habits: db.collection('DailyHabits'),
       }
-    },
-    created() {
-      this.setWeek();
-    },
-    mounted() {
-      this.days.forEach((day, i) => {
-        this.$binding(day, db.doc(`log/${this.dateArray[i].getFullYear()}/Months/${this.dateArray[i].getMonth()}/Days/${this.dateArray[i].getDate()}`))
-          .then((monday) => {
-            this.habitList[day] = monday;
-          }).catch(err => {
-          this.habitList[day] = {};
-        })
-      });
-    },
-    watch: {
-      weeklyData: function(newVal, oldVal) {
-      },
-      startDate: function(newVal, oldVal) {
-        this.incomingDate = this.getIncomingDate();
-      },
     },
     methods: {
       openDeleteDialog(title) {
@@ -179,7 +127,8 @@
             var batch = db.batch();
 
             snap.forEach((doc) => {
-              batch.delete(doc.ref);
+             this.deleteLog(doc.data().id);
+             batch.delete(doc.ref);
             });
 
             batch.commit();
@@ -187,88 +136,20 @@
         }
         this.$modal.hide('delete-habit-modal');
       },
-      getHabitList() {
-        return this.habitList;
-      },
-      updateTest(_checked) {
-        const n = (_checked) ? 8 : 0;
-        this.test(n);
-      },
-      test(n) {
-        this.$firestore.sunday.update({ fasdfdf: n })
-        this.$firestore.sunday.get().then((doc) => {
-          this.dayOne = doc.data().fasdfdf;
+      deleteLog(id) {
+        const log = db.collection(`DailyHabits/${id}/log`);
+        log.get().then((snapshot) => {
+          const batch = db.batch();
+
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          })
+          batch.commit();
         })
       },
-      getIncomingDate() {
-          const incomingDate = _.clone(this.startDate);
-          incomingDate.setDate(incomingDate.getDate() - 1);
-          return incomingDate;
+      togglePrivacy(id) {
+        db.doc(`DailyHabits/${id}`)
       },
-      logHabit(day, title, streak) {
-        console.log('log ', day, title, streak)
-        const logDate = new Date();
-
-        logDate.setYear(this.startDate.getFullYear());
-        logDate.setMonth(this.startDate.getMonth());
-        logDate.setDate(this.startDate.getDate() + day);
-
-        this.setStreak(logDate, title, streak);
-      },
-      setStreak(_date, habit, streak) {
-        const prevDay = _.clone(_date);
-        prevDay.setDate(prevDay.getDate() - 1);
-
-        db.doc(`log/${prevDay.getFullYear()}/Months/${prevDay.getMonth()}/Days/${prevDay.getDate()}`)
-          .get().then((doc) => {
-            const entry = {};
-            entry[habit] = streak;
-
-            db.collection('log')
-              .doc(String(_date.getFullYear()))
-              .collection('Months')
-              .doc(String(_date.getMonth()))
-              .collection('Days')
-              .doc(String(_date.getDate()))
-              .set(entry, { merge: true });
-            this.adjustFutureStreak(_date, streak, habit);
-          });
-      },
-      adjustFutureStreak(_date, streak, habit) {
-        const nextDate = _.clone(_date);
-        const entry = {};
-        nextDate.setDate(nextDate.getDate() + 1);
-        const log = this.getDateDoc(nextDate)
-        log.get().then(doc => {
-          if (doc.data() && doc.data()[habit] && doc.data()[habit] !== 0) {
-            entry[habit] = streak + 1;
-            log.set(entry, { merge: true });
-            this.adjustFutureStreak(nextDate, streak + 1, habit);
-          }
-        })
-      },
-      getDateDoc(_date) {
-        const doc = db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`);
-        console.log(doc)
-        return doc;
-      },
-      getHabitData(habitTitle) {
-        let data = [0, 0, 0, 0, 0, 0, 0]
-        this.weeklyData.forEach((day, i) => {
-          data[i] = day[habitTitle] | 0;
-        });
-
-        return data;
-      },
-      setWeek() {
-        this.week = days.map((days, i) => {
-          const newDate = new Date();
-          newDate.setMonth(this.startDate.getMonth());
-          newDate.setDate(this.startDate.getDate() + i);
-          this.incomingDate = this.getIncomingDate();
-          return { date: newDate.getDate(), month: months[newDate.getMonth()] }
-        });
-      }
     },
   }
 
@@ -276,13 +157,6 @@
     const start = new Date();
     start.setDate(date.getDate() - date.getDay())
     return months[start.getMonth()];
-  }
-  function logDays() {
-    const logDays = days.map((day, i) => {
-      const d = (i + (date.getDate() - dayNumber + 1));
-      return { day: d, month: date.getMonth(), year: date.getFullYear() }
-    })
-    return logDays;
   }
 
 </script>
@@ -390,6 +264,3 @@
     align-items: center;
   }
 </style>
-
-
-// WEBPACK FOOTER // // HabitList.vue

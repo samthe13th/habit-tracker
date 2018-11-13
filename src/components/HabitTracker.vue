@@ -7,13 +7,9 @@
     <habit-list
       v-if="showWeek"
       @change-week="changeWeek"
-      @log-habit="logHabit"
-      :inDate="inDate"
-      :outDate="outDate"
       :startDate="startDate"
       :dateArray="dateArray"
-      :dailyHabits="dailyHabits"
-      :weeklyData="weeklyData"/>
+      :dailyHabits="habits"/>
 
     <button class="floating-action-button" v-on:click="newHabit">
       +
@@ -41,21 +37,12 @@
     },
     data() {
       return {
-        dailyHabits: [],
-        weeklyData: [
-          {}, {}, {}, {}, {}, {}, {},
-        ],
-        incomingStreak: 0,
-        outgoingStreak: 0,
         startDate: date,
         dateArray: [date,date,date,date,date,date,date],
-        inDate: date,
-        outDate: date,
         showWeek: true,
       }
     },
     firestore() {
-      console.log(db.collection('habits'));
       return {
         habits: db.collection('habits'),
       }
@@ -63,13 +50,9 @@
     created() {
       this.startDate = new Date();
       this.startDate.setDate(date.getDate() - date.getDay());
-      this.getDailyHabits();
       this.setDateArray(this.startDate);
     },
     methods: {
-      loadWeek() {
-        this.setWeeklyData(this.dailyHabits, this.startDate)
-      },
       changeWeek(_startDate, direction) {
         this.startDate.setMonth(_startDate.getMonth());
         this.startDate.setYear(_startDate.getFullYear());
@@ -80,15 +63,10 @@
         }
 
         this.startDate = _.clone(this.startDate)
-
-        this.setWeeklyData(this.dailyHabits, this.startDate);
-        this.incomingStreak = 100;
-
         this.showWeek = false;
         this.setDateArray(this.startDate);
       },
       setDateArray(_startDate) {
-
         this.inDate = _.clone(_startDate);
         this.inDate.setDate(_startDate.getDate() - 1);
         this.outDate = _.clone(_startDate);
@@ -101,7 +79,7 @@
         } );
 
         setTimeout(() => {
-          this.showWeek= true;
+          this.showWeek = true;
         })
       },
       logout() {
@@ -112,72 +90,13 @@
       newHabit() {
         this.$modal.show('add-habit-modal');
       },
-      getDailyHabits() {
-        db.collection('DailyHabits').get().then(querySnapshot => {
-          const dailyHabits = []
-          querySnapshot.forEach(doc => {
-            dailyHabits.push(doc.data())
-          });
-          this.dailyHabits = dailyHabits;
-          this.setWeeklyData(this.dailyHabits, this.startDate);
-        });
-      },
       createHabit(newHabit) {
         this.$modal.hide('add-habit-modal');
         if (newHabit.period === 'daily') {
-          db.collection('DailyHabits').add(newHabit);
-        } else if (newHabit.period === 'weekly') {
-          db.collection('WeeklyHabits').add(newHabit);
-        } else {
-          db.collection('MonthlyHabits').add(newHabit);
+          const ref = db.collection('DailyHabits').doc();
+          const id = ref.id;
+          ref.set({ ...newHabit, id })
         }
-        this.getDailyHabits();
-      },
-      logHabit(habit, date, done, checked) {
-        const entry = {};
-        entry[habit] = 1;
-
-        db.collection('log')
-          .doc(String(date.year))
-          .collection('Months')
-          .doc(String(date.month))
-          .collection('Days')
-          .doc(String(date.day))
-          .set(entry, { merge: true })
-      },
-      setWeeklyData(habits, _date) {
-        const range = this.getRange(_date);
-        const weekData = {};
-
-        range.forEach((_date, rangeId) => {
-          this.$set(this.weeklyData[rangeId], 'date', _date.getDate());
-          db.doc(`log/${_date.getFullYear()}/Months/${_date.getMonth()}/Days/${_date.getDate()}`)
-            .get().then((doc) => {
-              habits.forEach((habit) => {
-                if (!weekData[habit.title]) {
-                  weekData[habit.title] = [];
-                }
-                let checked = 0;
-                if (doc.exists) {
-                  const data = doc.data();
-                  checked = doc.data()[habit.title];
-                }
-                weekData[habit.title].push(checked);
-                this.$set(this.weeklyData[rangeId], habit.title, checked);
-              })
-              this.weeklyData = _.clone(this.weeklyData)
-            });
-        });
-      },
-      getRange(_date) {
-        const range = [];
-        for (let i = 0; i < 7; i++) {
-          const newDate = new Date();
-          newDate.setMonth(_date.getMonth());
-          newDate.setDate(_date.getDate() + i)
-          range.push(newDate)
-        }
-        return range;
       },
     }
   }
@@ -231,8 +150,9 @@
 
   .action-button {
     background: #42b983;
-    padding: 14px;
-    border-radius: 22px;
+    padding: 10px 14px;
+    margin: 10px;
+    border-radius: 6px;
     font-size: 1em;
   }
 
