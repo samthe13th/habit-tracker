@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="habit-title">{{title}}</div>
-    <div class="habit-bar" :class="{ 'cell-private': !isPublic }">
+    <div class="habit-bar" :class="{ 'cell-private': habit && habit.private }">
       <div v-for="day in dateArray" class="cell">
         <data-point
           :id="id"
@@ -24,6 +24,11 @@
     name:    'HabitBar',
     components: {
       DataPoint
+    },
+    firestore() {
+      return {
+        habit: db.doc(`DailyHabits/${this.id}`)
+      }
     },
     data() {
       return {
@@ -67,7 +72,7 @@
   }
 
   .cell-private {
-    background: #2c2e84;
+    background: #4531d0;
   }
 
   .habit-bar {

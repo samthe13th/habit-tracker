@@ -20,15 +20,15 @@
 </template>
 
 <script>
-    export default {
-        name: 'dashboard',
-        data: function () {
-            return {
-            }
-        },
-        methods: {
-        },
-    }
+export default {
+    name: 'dashboard',
+    data: function () {
+        return {
+        }
+    },
+    methods: {
+    },
+}
 </script>
 
 <style scoped>
@@ -36,7 +36,6 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
         height: 100vh;
     }
 
@@ -63,7 +62,7 @@
 
     .in-development {
         position: absolute;
-        bottom: 0; 
+        bottom: 0;
         right: -20%;
         transform: rotate(-30deg);
         background: tomato;

@@ -4,8 +4,9 @@ import Habits from '@/components/HabitTracker'
 import Login from '@/components/Login'
 import SignUp from '@/components/SignUp'
 import Dashboard from '@/components/Dashboard'
+import Todos from '@/components/Todos'
 
-Vue.use(Router)
+Vue.use(Router);
 
 export default new Router({
   routes: [
@@ -18,6 +19,10 @@ export default new Router({
       redirect: '/login'
     },
     {
+      path: '/todos',
+      component: Todos,
+    },
+    {
       path: '/dashboard',
       name: 'Dashboard',
       component: Dashboard,
@@ -26,7 +31,7 @@ export default new Router({
       path: '/habits',
       name: 'HabitTracker',
       component: Habits,
-    }, 
+    },
     {
       path: '/login',
       name: 'Login',
@@ -35,7 +40,7 @@ export default new Router({
     {
       path: '/sign-up',
       name: 'SignUp',
-      component: SignUp, 
+      component: SignUp,
       meta: {
         requiresAuth: true
       }

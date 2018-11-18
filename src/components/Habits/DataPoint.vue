@@ -3,7 +3,7 @@
   <div style="position: relative">
 
     <template v-if="log">
-      <button 
+      <button
         @click="logHabit()"
         v-bind:class="{
           'point--sm': nextLog[nextDate.getDate()] || !log[date.getDate()],
@@ -17,12 +17,12 @@
       </button>
 
       <template v-if="log[date.getDate()]">
-        <div 
-          v-if="prevLog && prevLog[prevDate.getDate()]" 
+        <div
+          v-if="prevLog && prevLog[prevDate.getDate()]"
           class="streak-bar">
         </div>
 
-        <div 
+        <div
           v-if="date.getDay() === 6 && nextLog[nextDate.getDate()]"
           class="streak-bar--end">
         </div>
@@ -152,7 +152,7 @@
   }
 
   .point--marked {
-    background: dodgerblue;
+    background: #6bb6ff;
   }
 
   .streak-bar {
@@ -163,7 +163,7 @@
     left: -55px;
     top: 0;
     position: absolute;
-    background-color: #2196F3;
+    background-color: #6bb6ff;
     opacity: 0.6;
   }
 
@@ -175,7 +175,7 @@
     right: -55px;
     top: 0;
     position: absolute;
-    background-color: #2196F3;
+    background-color: #6bb6ff;
     opacity: 0.6;
   }
 </style>

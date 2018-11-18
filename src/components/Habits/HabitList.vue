@@ -38,7 +38,6 @@
 
     </div>
 
-
     <template v-for="habit in habits">
       <div style="position: relative; margin: 5px">
 
@@ -52,12 +51,17 @@
 
         <!-- buttons -->
         <div class="habit-buttons">
+
+          <!-- privacy -->
           <button class="privacy-btn" v-on:click="togglePrivacy(habit.id)">
             <img src="../../assets/lock-96.png" />
           </button>
+
+          <!-- delete -->
           <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
             Delete
           </button>
+
         </div>
 
       </div>
@@ -148,7 +152,19 @@
         })
       },
       togglePrivacy(id) {
-        db.doc(`DailyHabits/${id}`)
+        const habitDoc = this.$firestore.habits.doc(id);
+       habitDoc.get().then((snap) => {
+         console.log('privacy: ', snap.data().id)
+         if (!snap.data().private) {
+           habitDoc.update({
+             private: true
+           })
+         } else {
+           habitDoc.update({
+             private: false
+           })
+         }
+       })
       },
     },
   }

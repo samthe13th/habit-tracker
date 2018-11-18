@@ -14,6 +14,7 @@
     <button class="floating-action-button" v-on:click="newHabit">
       +
     </button>
+
     <modal name="add-habit-modal" :width="400" :height="400">
       <new-habit @create-habit="createHabit" />
     </modal>
@@ -95,161 +96,10 @@
         if (newHabit.period === 'daily') {
           const ref = db.collection('DailyHabits').doc();
           const id = ref.id;
-          ref.set({ ...newHabit, id })
+          ref.set({ ...newHabit, id, private: false })
         }
       },
     }
   }
 
 </script>
-
-<style>
-  h1,
-  h2 {
-    font-weight: normal;
-  }
-
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-
-  li {
-    display: inline-block;
-    margin: 0 10px;
-  }
-
-  a {
-    color: #42b983;
-  }
-
-  .nav {
-    display: flex;
-    align-items: right;
-  }
-
-  .radio-buttons {
-    align-self: left;
-    margin-bottom: 20px;
-  }
-
-  button,
-  .tool-button {
-    color: white;
-    background-color: lightgrey;
-    font-weight: bold;
-    border: none;
-    outline: 0;
-    cursor: pointer;
-  }
-
-  .tool-button {
-    position: absolute;
-    right: 0;
-  }
-
-  .action-button {
-    background: #42b983;
-    padding: 10px 14px;
-    margin: 10px;
-    border-radius: 6px;
-    font-size: 1em;
-  }
-
-  .floating-action-button {
-    position: absolute;
-    right: 50px;
-    bottom: 50px;
-    height: 70px;
-    width: 70px;
-    z-index: 99;
-    background: #42b983;
-    border-radius: 100%;
-    font-size: 2.2em;
-  }
-
-  .week th {
-    min-width: 100px;
-  }
-
-  .check {
-    border-radius: 100%;
-  }
-
-  .custom-modal {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    height: 100%;
-  }
-
-  .custom-modal h3 {
-    align-self: center;
-    text-align: center;
-  }
-
-  .container {
-    position: relative;
-    padding-left: 25px;
-    padding-right: 20px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    font-size: 16px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  /* Hide the browser's default radio button */
-
-  .container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-  }
-  /* Create a custom radio button */
-
-  .checkmark {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 20px;
-    width: 20px;
-    background-color: #eee;
-    border-radius: 50%;
-  }
-  /* On mouse-over, add a grey background color */
-
-  .container:hover input~.checkmark {
-    background-color: #ccc;
-  }
-  /* When the radio button is checked, add a blue background */
-
-  .container input:checked~.checkmark {
-    background-color: #2196F3;
-  }
-  /* Create the indicator (the dot/circle - hidden when not checked) */
-
-  .checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-  }
-  /* Show the indicator (dot/circle) when checked */
-
-  .container input:checked~.checkmark:after {
-    display: block;
-  }
-  /* Style the indicator (dot/circle) */
-
-  .container .checkmark:after {
-    top: 6px;
-    left: 6px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: white;
-  }
-</style>
