@@ -1,7 +1,13 @@
 <template>
-  <div @click="$emit('edit-todo')" class="todo-card">
-    <h3>{{ todo.name }}</h3>
-    <h5>{{ checked.length }} / {{ items }}</h5>
+  <div @mouseover="mouseOver" class="todo-card">
+    <div style="flex: 1">
+      <h3>{{ name }}</h3>
+    </div>
+    <h5 class="todo-card__summary">{{ checked.length }} / {{ items }}</h5>
+    <div @mouseout="mouseOut" class="todo-card__overlay">
+      <button @click="$emit('edit-todo')" class="todo-card__button action-button">Open</button>
+      <button @click="$emit('delete-todo')" class="todo-card__button action-button">Delete</button>
+    </div>
   </div>
 </template>
 
@@ -15,25 +21,73 @@
       'id',
       'name',
       'items',
-      'checked'
+      'checked',
     ],
-    firestore() {
+    data() {
       return {
-        todo: db.collection('Todos').doc(this.id)
+        overCard: false
       }
     },
+    methods: {
+      mouseOver() {
+        this.overCard = true;
+      },
+      mouseOut() {
+        this.overCard = false;
+      }
+    }
   }
 </script>
 
 <style scoped>
+
+  .todo-card__overlay {
+    display: flex;
+    padding: 30px;
+    flex-direction: column;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: none;
+    width: 200px;
+    height: 200px;
+    border-radius: inherit;
+  }
+
+  .todo-card__overlay:hover {
+     display: flex;
+     background: rgba(0,0,0,0.5)
+  }
+
+  .todo-card__button {
+    display: none;
+  }
+
+  .todo-card__overlay:hover .todo-card__button {
+    display: block;
+  }
+
+  .todo-card__delete {
+    position: absolute;
+  }
+
+  .todo-card__summary {
+    font-size: 38px;
+  }
+
   .todo-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     width: 200px;
     height: 200px;
     border-radius: 8px;
     background: white;
     margin: 20px;
-    padding: 5px;
+    padding: 15px;
     cursor: pointer;
+    overflow: hidden;
 
     h3 {
       padding: 0;

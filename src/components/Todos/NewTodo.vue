@@ -1,7 +1,7 @@
 <template>
   <div class="custom-modal new-todo">
     <h3>New Todo</h3>
-    <input ref="titleInput" class="text-input " v-model="title" type="text">
+    <input ref="titleInput" class="text-input " v-model="title" type="text" maxlength="60">
     <br>
     <div class="radio-buttons">
       <label class="container">Daily

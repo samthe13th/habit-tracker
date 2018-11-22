@@ -9,25 +9,30 @@
     </div>
 
     <div class="todos-list--wrapper">
-      <div class="todos-list">
-        <todo-card
-          v-for="list in todos"
-          :id="list.id"
-          :name="list.name"
-          :items="list.items.length"
-          :checked="checked(list.items)"
-          @edit-todo="openEditModal(list.id)"
-        ></todo-card>
-      </div>
+      <template v-for="date in dates">
+        <h5 v-if="date" >{{ date[".key"] }}</h5>
+        <div class="todos-list">
+          <todo-card
+            v-for="list in date.todos"
+            :id="list.id"
+            :name="list.name"
+            :items="list.items.length"
+            :checked="checked(list.items)"
+            @edit-todo="openEditModal(list.id, date['.key'], date)"
+            @delete-todo="deleteTodo(list.id, list.created)"
+          ></todo-card>
+        </div>
+      </template>
     </div>
 
-    <modal name="new-todo-modal" :width="400" :height="350">
+    <modal name="new-todo-modal" :width="400" :height="'100%'">
       <new-todo @new-todo="newTodo"/>
     </modal>
 
-    <modal name="edit-todo-modal" :height="600" @before-close="beforeEditClose">
-      <edit-todo :id="selectedTodoId"></edit-todo>
+    <modal name="edit-todo-modal" :adaptive="true" :height="'90%'" :draggable="true" @before-close="beforeEditClose">
+      <edit-todo v-if="selectedTodoDate && selectedTodoId" :date="selectedTodoDate" :id="selectedTodoId"></edit-todo>
     </modal>
+
   </div>
 </template>
 
@@ -45,6 +50,8 @@ export default {
   data() {
     return {
       selectedTodoId: '',
+      selectedTodoDate: '',
+      selectedTodoDateRef: null,
     }
   },
   components: {
@@ -54,7 +61,8 @@ export default {
   },
   firestore() {
     return {
-      todos: db.collection('Todos')
+      todos: db.collection('Todos'),
+      dates: db.collection('Date'),
     };
   },
   methods: {
@@ -62,11 +70,23 @@ export default {
       return list.filter(item => item.checked);
     },
     beforeEditClose() {
-      console.log("close!")
+      console.log("close!");
     },
-    openEditModal(id) {
+    openEditModal(id, date, ref) {
       this.selectedTodoId = id;
+      this.selectedTodoDate = date;
+      this.selectedTodoDateRef = ref;
       this.$modal.show('edit-todo-modal');
+    },
+    deleteTodo(id, created) {
+      const ref = db.collection('Date').doc(created);
+      let todos;
+      ref.get().then((doc) => {
+        todos = doc.data().todos;
+        ref.update({
+          todos: _.omit(todos, id)
+        })
+      });
     },
     openTodoModal() {
       this.$modal.show('new-todo-modal');
@@ -75,9 +95,23 @@ export default {
       this.$modal.hide('new-todo-modal');
       const ref = this.$firestore.todos.doc();
       this.selectedTodoId = ref.id;
-      ref.set({ name, type, created, items: [], id: this.selectedTodoId });
+
+      db.collection('Date')
+        .doc(created)
+        .set(
+          { todos: {
+              [ref.id]: {
+                name,
+                type,
+                created,
+                items: [],
+                id: this.selectedTodoId
+              }
+            }
+          }, { merge: true });
+
       setTimeout(() => {
-        this.openEditModal(ref.id);
+        this.openEditModal(ref.id, created);
       }, 100)
     },
     createHabit(newHabit) {
@@ -86,7 +120,6 @@ export default {
         const ref = db.collection('DailyHabits').doc();
         const id = ref.id;
         ref.set({ ...newHabit, id, private: false });
-
       }
     },
   }
@@ -115,17 +148,19 @@ export default {
 
   .todos-list--wrapper {
     display: flex;
+    align-items: flex-start;
     flex-direction: column;
-    justify-content: center;
     height: 100vh;
-    align-items: center;
+    padding: 20px 10px;
   }
 
   .todos-list {
     display: flex;
-    justify-content: flex-start;
     flex-wrap: wrap;
     overflow: scroll;
-    padding: 20px 10px;
+  }
+
+  .todos-list--wrapper h5 {
+      margin: 20px;
   }
 </style>

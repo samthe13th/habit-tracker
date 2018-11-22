@@ -1,8 +1,8 @@
 <template>
-  <div class="edit-modal">
-    <div class="edit-modal__header">{{ list.name }}</div>
+  <div class="edit-modal" v-if="dateRef.todos && dateRef.todos[id]">
+    <div class="edit-modal__header">{{ dateRef.todos[id].name }}</div>
     <div class="edit-modal__content" id="edit-modal-content">
-      <div class="edit-modal__content-list" v-for="(item, index) in list.items">
+      <div class="edit-modal__content-list" v-for="(item, index) in dateRef.todos[id].items">
         <label class="container">
           {{ item.name }}
           <input
@@ -12,7 +12,7 @@
             type="checkbox">
           <span class="checkmark todo_checkmark"></span>
         </label>
-        <button class="x-button">&#10761</button>
+        <button class="x-button" @click="deleteListItem(index)">&#10761</button>
       </div>
       <input
         class="form-input"
@@ -32,7 +32,8 @@
 
   export default {
     props: [
-      'id'
+      'id',
+      'date',
     ],
     data() {
       return {
@@ -43,33 +44,63 @@
     },
     firestore() {
       return {
-        list: db.collection('Todos').doc(this.id)
+        dateRef: db.collection('Date').doc(this.date)
       };
     },
     created() {
       this.$nextTick(() => {
-        this.$refs.todoName.focus();
+        console.log(this.$refs.todoName)
+       // this.$refs.todoName.focus();
       });
     },
     methods: {
+      removeItem(list, index) {
+        return list.filter((x, i) => {
+          return i !== index;
+        });
+      },
+      deleteListItem(index) {
+        this.$firestore.dateRef.get().then((doc) => {
+          const todo = doc.data().todos[this.id];
+          const items = this.removeItem(doc.data().todos[this.id].items, index);
+
+          this.$firestore.dateRef.set({
+            todos: {
+              [this.id]: { ...todo, items }
+            }
+          }, { merge: true })
+        })
+      },
       toggleTodoItem(index, name, e) {
-        this.$firestore.list.get().then((snap) => {
-          const items = snap.data().items;
-          items[index].checked = e.target.checked;
-          this.$firestore.list.update({
-            items
-          })
+        this.$firestore.dateRef.get().then((doc) => {
+          const todo = doc.data().todos[this.id];
+          const items = _.clone(todo.items);
+
+          items[index] = {
+            name: todo.items[index].name,
+            checked: e.target.checked
+          };
+
+          this.$firestore.dateRef.set({
+            todos: {
+              [this.id]: { ...todo, items }
+            }
+          }, { merge: true })
         })
       },
       submitItem() {
         if (this.todoName !== '') {
           const item = { name: this.todoName, checked: false };
           this.todoName = '';
-          this.$firestore.list.get().then((doc) => {
-            const items = doc.data().items;
-            this.$firestore.list.update({
-              items: [...items, item]
-            });
+          this.$firestore.dateRef.get().then((doc) => {
+            const todo = doc.data().todos[this.id];
+            this.$firestore.dateRef.set({
+              todos: {
+                [this.id]: {
+                  ...todo, items: [ ...todo.items, item ]
+                }
+              }
+            }, { merge: true })
           });
           const content = document.getElementById('edit-modal-content');
           content.scrollTop = content.scrollHeight + 20;

@@ -13,11 +13,14 @@
 <script>
   import Vue from 'vue'
 
+  const today = new Date();
+
 export default {
   name: 'App',
   data: function() {
     return {
-      showModal: false
+      showModal: false,
+      today: today,
     }
   },
 }
@@ -52,13 +55,22 @@ Vue.component('nav-drawer', {
   `
   <div class="nav-drawer">
     <div class="nav-list">
-      <div v-for="link in links" class="nav-list--item">{{link}}</div>
+      <a
+        :href="route.link"
+        v-for="route in routes"
+        class="nav-list--item">
+        {{ route.title }}
+      </a>
     </div>
   </div>
   `,
   data() {
     return {
-      links: ['Dashboard', 'Habits', 'Todos']
+      routes: [
+        { title: 'Dashboard', link: './#/dashboard' },
+        { title: 'Habits', link: './#/habits' },
+        { title: 'Todos', link: './#/todos' },
+      ]
     }
   }
 });
