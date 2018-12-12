@@ -3,17 +3,7 @@
     <h3>New Todo</h3>
     <input ref="titleInput" class="text-input " v-model="title" type="text" maxlength="60">
     <br>
-    <div class="radio-buttons">
-      <label class="container">Daily
-        <input value="daily" v-model="todoType" type="radio" checked="checked" name="radio">
-        <span class="checkmark"></span>
-      </label>
-      <label class="container">Long-term
-        <input value="long-term" v-model="todoType"  type="radio" name="radio">
-        <span class="checkmark"></span>
-      </label>
-    </div>
-    <button class="action-button" @click="$emit('new-todo', title, todoType, formattedDate())">Create</button>
+    <button v-if="title !== ''" class="action-button" @click="$emit('new-todo', title, projectId, formattedDate())">Create</button>
   </div>
 </template>
 
@@ -23,23 +13,27 @@
   const date = new Date();
 
   export default {
+    props: [
+      'projectId',
+    ],
     created() {
+      console.log("PROJECT: ", this.projectId)
       this.$nextTick(() => {
         this.$refs.titleInput.focus();
       });
     },
     data() {
       return {
-        todoType: 'daily',
+        todoType: 'project',
         date: new Date(),
-        title: date.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        title: '',
         dateOptions: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
       }
     },
     methods: {
       formattedDate() {
-        return  this.date.toLocaleDateString("en-US", this.dateOptions)
-      }
+        return this.date.toLocaleDateString("en-US", this.dateOptions)
+      },
     },
   }
 
@@ -47,7 +41,7 @@
 
 <style>
   .new-todo input {
-    text-align: center;
+    text-align: start;
     font-size: 20px;
   }
 </style>

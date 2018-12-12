@@ -3,7 +3,7 @@
     <status-bar></status-bar>
     <div style="display: flex; flex: 1">
       <nav-drawer></nav-drawer>
-      <div style="overflow: hidden; background: #f5f2f2; width: 100%">
+      <div style="overflow: hidden; background: #e3ecf6; width: 100%">
         <router-view/>
       </div>
     </div>
@@ -62,6 +62,7 @@ Vue.component('nav-drawer', {
         {{ route.title }}
       </a>
     </div>
+    <button class="nav-drawer-button"></button>
   </div>
   `,
   data() {
@@ -69,7 +70,7 @@ Vue.component('nav-drawer', {
       routes: [
         { title: 'Dashboard', link: './#/dashboard' },
         { title: 'Habits', link: './#/habits' },
-        { title: 'Todos', link: './#/todos' },
+        { title: 'Projects', link: './#/projects' },
       ]
     }
   }
@@ -86,6 +87,7 @@ Vue.component('nav-drawer', {
     font-size: 20px;
     margin: 0;
     overflow: scroll;
+    width: 350px;
   }
 
   .nav-list--item {
@@ -101,8 +103,20 @@ Vue.component('nav-drawer', {
 
   .nav-drawer {
     background: #314863;
-    width: 350px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .nav-drawer a {
+    color: white;
+  }
+
+  .nav-drawer-button {
+    flex: 1;
+    width: 30px;
+    color: white;
+    background: #314863;
   }
 
   .status-text {
@@ -156,12 +170,14 @@ Vue.component('nav-drawer', {
     font-size: 1.6em;
     margin-top: 10px;
     margin-bottom: 20px;
+    text-align: center;
   }
 
   .action-button {
     background: #42b983;
     padding: 10px 14px;
     margin: 10px;
+    margin-left: 0;
     border-radius: 6px;
     font-size: 1em;
   }

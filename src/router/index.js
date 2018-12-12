@@ -4,7 +4,7 @@ import Habits from '@/components/HabitTracker'
 import Login from '@/components/Login'
 import SignUp from '@/components/SignUp'
 import Dashboard from '@/components/Dashboard'
-import Todos from '@/components/Todos'
+import Projects from '@/components/Projects'
 
 Vue.use(Router);
 
@@ -19,8 +19,8 @@ export default new Router({
       redirect: '/login'
     },
     {
-      path: '/todos',
-      component: Todos,
+      path: '/projects',
+      component: Projects,
     },
     {
       path: '/dashboard',

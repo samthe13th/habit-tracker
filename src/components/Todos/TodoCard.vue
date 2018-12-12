@@ -18,6 +18,7 @@
   export default {
     name: 'TodoCard',
     props: [
+      'project',
       'id',
       'name',
       'items',
@@ -77,6 +78,7 @@
   }
 
   .todo-card {
+    align-items: center;
     position: relative;
     display: flex;
     flex-direction: column;
