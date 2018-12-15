@@ -1,9 +1,10 @@
 <template>
   <div @mouseover="mouseOver" class="todo-card">
+    <div class="todo-card__group-mark"></div>
     <div style="flex: 1">
       <h3>{{ name }}</h3>
     </div>
-    <h5 class="todo-card__summary">{{ checked.length }} / {{ items }}</h5>
+    <h5 class="todo-card__summary" style="margin-bottom: 30px">{{ checked.length }} / {{ items }}</h5>
     <div @mouseout="mouseOut" class="todo-card__overlay">
       <button @click="$emit('edit-todo')" class="todo-card__button action-button">Open</button>
       <button @click="$emit('delete-todo')" class="todo-card__button action-button">Delete</button>
@@ -41,6 +42,17 @@
 </script>
 
 <style scoped>
+
+  .todo-card__group-mark {
+    border-radius: 10px 0;
+    border-left: solid 20px rgb(76, 219, 157);
+    border-bottom: solid 20px transparent;
+    border-top: solid 20px rgb(76, 219, 157);
+    border-right: solid 20px transparent;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
 
   .todo-card__overlay {
     display: flex;

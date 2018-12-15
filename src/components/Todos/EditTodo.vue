@@ -1,6 +1,6 @@
 <template>
   <div class="edit-modal" v-if="project.todos">
-  <div class="edit-modal__header">{{ project.todos[id].name }}</div>
+    <div class="edit-modal__header">{{ project.todos[id].name }}</div>
 
     <div v-if="project.todos" class="edit-modal__content-list" v-for="(item, index) in project.todos[id].items">
       <label class="container">
@@ -16,7 +16,7 @@
     </div>
 
     <input
-      class="form-input"
+      class="text-input"
       ref="todoName"
       v-model="todoName"
       placeholder="new item"
@@ -130,6 +130,18 @@
 </script>
 
 <style scoped>
+  .edit-modal .text-input {
+    padding: 0 10px;
+    border: solid 1px lightgrey;
+    margin: 20px;
+    width: calc(100% - 60px);
+    border-radius: 5px;
+  }
+
+  .edit-modal .text-input:focus {
+    border-bottom: 2px solid #7599c4;
+  }
+
   .todo_checkmark {
     position: absolute;
     top: 0;

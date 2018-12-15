@@ -1,5 +1,6 @@
 <template>
   <div class="module">
+
     <div class="toolbar">
       <button
         class="action-button"
@@ -11,20 +12,17 @@
     <div class="todos-list--wrapper">
       <div v-for="project in projects" class="project-list">
 
-        <div style="margin-left: 20px; color: #2a4865">
-          <h2>
-            {{ project.name }}
-            <span>({{ getPercent(project) }}%)</span>
-          </h2>
+        <div style="margin-left: 20px; color: #2a4865; margin-bottom: 10px">
+          <h2>{{ project.name }} <span>({{ getPercent(project) }}%)</span></h2>
 
-          <span style="display: flex; align-items: center">
-            <button v-on:click="deleteProject(project.id)" class="todo-card__button action-button">Delete Project</button>
-            <button class="action-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
+          <span class="project-buttons-group">
+            <button class="menu-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
+            <button class="menu-button" v-on:click="openNewGroupModal(project.id)">New Group</button>
+            <button v-on:click="deleteProject(project.id)" class="todo-card__button menu-button">Delete Project</button>
           </span>
         </div>
 
         <todos :project="project"></todos>
-
       </div>
     </div>
 
@@ -32,8 +30,12 @@
       <new-project @new-project="newProject"/>
     </modal>
 
-    <modal name="new-todo-modal" :width="400" @before-open="beforeOpen">
+    <modal name="new-todo-modal"  :width="400" @before-open="beforeOpen">
       <new-todo :projectId="currentProjectId" @new-todo="newTodo"/>
+    </modal>
+
+    <modal name="new-group-modal" :height="450" :width="400" @before-open="beforeOpen">
+      <new-group :projectId="currentProjectId" @new-group="newGroup"/>
     </modal>
 
   </div>
@@ -48,12 +50,11 @@
   import TodoCard from './Todos/TodoCard'
   import EditTodo from './Todos/EditTodo'
   import NewProject from './Todos/NewProject'
+  import NewGroup from './Todos/NewGroup'
   import Todos from './Todos/Todos'
 
   export default {
     name: 'Projects',
-    created() {
-    },
     data() {
       return {
         selectedTodoType: '',
@@ -70,11 +71,13 @@
       EditTodo,
       NewProject,
       Todos,
+      NewGroup,
     },
     firestore() {
       return {
         todos: db.collection('Todos'),
         projects: db.collection('Projects'),
+        groups: db.collection('Groups'),
       };
     },
     methods: {
@@ -83,19 +86,16 @@
         const todosLength = Object.keys(project.todos).length;
 
         _.each(project.todos, (todo) => {
-          console.log(todo.items, todo.items.length);
           const itemsLength = todo.items.length;
           let checked = 0;
 
           _.each(todo.items, (item) => {
-            console.log(item.checked)
             if (item.checked) {
               checked += 1;
             }
           });
 
           const todoPercent = (itemsLength > 0) ? checked / itemsLength : 0;
-          console.log('todo percent: ', checked, itemsLength, todoPercent);
           percent += todoPercent * (1 / todosLength) * 100;
         });
         return percent === NaN ? 0 : Math.floor(percent);
@@ -106,8 +106,17 @@
       beforeOpen(event) {
         this.currentProjectId = event.params.projectId;
       },
+      newGroup(e) {
+        console.log("new group")
+      },
       openNewProjectModal() {
         this.$modal.show('new-project-modal');
+      },
+      openNewGroupModal(projectId) {
+        this.$modal.show('new-group-modal', { projectId });
+      },
+      openNewTodoModal(projectId) {
+        this.$modal.show('new-todo-modal', { projectId });
       },
       deleteProject(id) {
         this.$firestore.projects.doc(id).delete();
@@ -124,10 +133,6 @@
               todos: [],
             });
       },
-      openNewTodoModal(projectId) {
-        console.log('open  new todo modal');
-        this.$modal.show('new-todo-modal', { projectId });
-      },
       newTodo(name, projectId, created) {
         const project = this.$firestore.projects.doc(projectId)
 
@@ -135,6 +140,8 @@
 
         const ref = this.$firestore.todos.doc();
         this.selectedTodoId = ref.id;
+
+        const groupId = this.$firestore.groups.doc().id;
 
          project.get()
           .then( ( doc ) => {
@@ -144,6 +151,13 @@
                name,
                type:    'project',
                created,
+                groups: {
+                 [groupId]: {
+                   name: '',
+                   color: '#ffffff',
+                   items: []
+                 }
+               },
                items:   [],
                project: this.currentProjectId,
                id:      this.selectedTodoId,
@@ -161,6 +175,15 @@
 </script>
 
 <style scoped>
+
+  .project-buttons-group {
+    display: flex;
+    align-items: center;
+  }
+
+  .project-buttons-group button {
+    margin-right: 20px;
+  }
 
   .todo-button {
     margin-left: 20px;
@@ -182,11 +205,11 @@
   }
 
   .toolbar {
-    background: #74cce4;
+    background: #7599c4;
     height: 60px;
     display: flex;
     flex-shrink: 0;
-    padding-left: 20px;
+    padding-left: 30px;
   }
 
   .toolbar .action-button {
@@ -199,7 +222,7 @@
     align-items: flex-start;
     flex-direction: column;
     height: 100vh;
-    padding: 20px 10px;
+    padding: 20px;
     overflow: scroll;
   }
 

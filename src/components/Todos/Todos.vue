@@ -74,19 +74,14 @@ export default {
       return list.filter(item => item.checked);
     },
     beforeOpen(event) {
-      console.log('before open: ', event.params);
       this.currentProjectId = event.params.projectId;
     },
     openEditModal(id, date) {
-      // todo set project!
-      console.log('open edit modal', this.project, id, date);
       this.selectedTodoId = id;
       this.selectedTodoDate = date;
       this.$modal.show(`${this.project.id}__edit-todo`);
     },
     deleteTodo(todoId, projectId) {
-      console.log(projectId, todoId);
-
       const project = this.$firestore.projects.doc(projectId)
       project.get().then((doc) => {
         const todos = doc.data().todos;

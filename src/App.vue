@@ -11,26 +11,115 @@
 </template>
 
 <script>
-  import Vue from 'vue'
+  import Vue from 'vue';
+  import VueColor from 'vue-color'
+  const Chrome = VueColor.Chrome;
 
   const today = new Date();
 
-export default {
+  export default {
   name: 'App',
   data: function() {
     return {
       showModal: false,
       today: today,
+      color: '',
     }
   },
 }
+
+  Vue.component('colorpicker', {
+    components: {
+      'chrome-picker': Chrome,
+    },
+    template: `
+    <div class="input-group color-picker" ref="colorpicker">
+      <span class="input-group-addon color-picker-container">
+        <span class="current-color" :style="'background-color: ' + colorValue" @click="togglePicker()"></span>
+        <chrome-picker :value="colors" @input="updateFromPicker" v-if="displayPicker" />
+      </span>
+    </div>`,
+    props: ['color'],
+    data() {
+      return {
+        colors: {
+          hex: '#000000',
+        },
+        colorValue: '',
+        displayPicker: false,
+      }
+    },
+    mounted() {
+      this.setColor(this.color || '#000000');
+    },
+    methods: {
+      setColor(color) {
+        this.updateColors(color);
+        this.colorValue = color;
+      },
+      updateColors(color) {
+        if(color.slice(0, 1) == '#') {
+          this.colors = {
+            hex: color
+          };
+        }
+        else if(color.slice(0, 4) == 'rgba') {
+          var rgba = color.replace(/^rgba?\(|\s+|\)$/g,'').split(','),
+              hex = '#' + ((1 << 24) + (parseInt(rgba[0]) << 16) + (parseInt(rgba[1]) << 8) + parseInt(rgba[2])).toString(16).slice(1);
+          this.colors = {
+            hex: hex,
+            a: rgba[3],
+          }
+        }
+      },
+      showPicker() {
+        document.addEventListener('click', this.documentClick);
+        this.displayPicker = true;
+      },
+      hidePicker() {
+        document.removeEventListener('click', this.documentClick);
+        this.displayPicker = false;
+      },
+      togglePicker() {
+        this.displayPicker ? this.hidePicker() : this.showPicker();
+      },
+      updateFromInput() {
+        this.updateColors(this.colorValue);
+      },
+      updateFromPicker(color) {
+        this.colors = color;
+        if(color.rgba.a == 1) {
+          this.colorValue = color.hex;
+        }
+        else {
+          this.colorValue = 'rgba(' + color.rgba.r + ', ' + color.rgba.g + ', ' + color.rgba.b + ', ' + color.rgba.a + ')';
+        }
+      },
+      documentClick(e) {
+        var el = this.$refs.colorpicker,
+            target = e.target;
+        if(el !== target && !el.contains(target)) {
+          this.hidePicker()
+        }
+      }
+    },
+    watch: {
+      colorValue(val) {
+        if(val) {
+          this.updateColors(val);
+          this.$emit('input', val);
+          //document.body.style.background = val;
+        }
+      }
+    },
+  });
 
 Vue.component('status-bar', {
   template:
   `
   <div class="status-bar">
     <breadcrumb></breadcrumb>
-    <button>Logout</button>
+    <button class="menu-button">Logout</button>
   </div>
   `,
   data() {
@@ -79,6 +168,35 @@ Vue.component('nav-drawer', {
 </script>
 
 <style>
+  .menu-button {
+    background: #7599c447;
+    color: #314863;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+
+  .menu-button:hover,
+  .menu-button:focus {
+    background: #7599c4;
+    color: white;
+  }
+
+  .text-input {
+    padding: 0 10px;
+    border: solid 1px #7599c4;
+    margin: 20px;
+    width: calc(100% - 60px);
+    border-radius: 5px;
+  }
+
+  .current-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #000;
+    cursor: pointer;
+  }
+
   .nav-list {
     display: flex;
     flex-direction: column;
@@ -132,13 +250,7 @@ Vue.component('nav-drawer', {
     width: 100%;
     border-bottom: solid #314863 1px;
     display: flex;
-  }
-
-  .status-bar button {
-    background: #314863;
-    padding: 0 15px;
-    border: solid white 4px;
-    border-radius: 10px;
+    padding: 6px;
   }
 
   #app {
@@ -150,14 +262,6 @@ Vue.component('nav-drawer', {
     display: flex;
     flex-direction: column;
     height: 100vh;
-  }
-
-  .text-input {
-    margin: 5px 0;
-    width: 250px;
-    padding: 8px;
-    border: solid 1px lightgrey;
-    font-size: 14px;
   }
 
   h1 {
@@ -180,6 +284,10 @@ Vue.component('nav-drawer', {
     margin-left: 0;
     border-radius: 6px;
     font-size: 1em;
+  }
+
+  .action-button:disabled {
+    background: lightgrey;
   }
 
   h1,
