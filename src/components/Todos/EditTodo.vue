@@ -1,8 +1,12 @@
 <template>
-  <div class="edit-modal" v-if="project.todos">
-    <div class="edit-modal__header">{{ project.todos[id].name }}</div>
+  <div class="edit-modal" v-if="project.groups && project.groups[groupId].todos">
+    <div class="edit-modal__header">{{ project.groups[groupId].todos[id].name }}</div>
 
-    <div v-if="project.todos" class="edit-modal__content-list" v-for="(item, index) in project.todos[id].items">
+    <div
+      v-if="project.groups[groupId].todos"
+      class="edit-modal__content-list"
+      v-for="(item, index) in project.groups[groupId].todos[id].items">
+
       <label class="container">
         {{ item.name }}
         <input
@@ -12,7 +16,9 @@
           type="checkbox">
         <span class="checkmark todo_checkmark"></span>
       </label>
+
       <button class="x-button" @click="deleteListItem(index)">&#10761</button>
+
     </div>
 
     <input
@@ -20,8 +26,7 @@
       ref="todoName"
       v-model="todoName"
       placeholder="new item"
-      v-on:keyup.enter="submitItem" />
-
+      v-on:keyup.enter="submitItem"/>
   </div>
 </template>
 
@@ -35,7 +40,8 @@
     props:   [
       'id',
       'title',
-      'projectId'
+      'projectId',
+      'groupId',
     ],
     data() {
       return {
@@ -52,9 +58,6 @@
     created() {
       console.log("EDIT");
       console.log(this.$firestore.project)
-      this.$firestore.project.get().then((doc) => {
-        console.log(doc.data().todos[this.id]);
-      })
       this.$nextTick( () => {
         // console.log(this.$refs.todoName)
         // this.$refs.todoName.focus();
@@ -85,7 +88,9 @@
       toggleTodoItem( index, name, e ) {
         this.$firestore.project.get()
           .then( ( doc ) => {
-            const todo  = doc.data().todos[ this.id ];
+            const groups = doc.data().groups;
+            const todos = groups[this.groupId].todos;
+            const todo  = todos[ this.id ];
             const items = _.clone( todo.items );
 
             items[ index ] = {
@@ -94,10 +99,17 @@
             };
 
             this.$firestore.project.set( {
-              todos: {
-                [this.id]: {
-                  ...todo,
-                  items
+              groups: {
+                ...groups,
+                [this.groupId]: {
+                  ...groups[this.groupId],
+                  todos: {
+                    ...todos,
+                    [this.id]: {
+                      ...todo,
+                      items
+                    }
+                  }
                 }
               }
             }, { merge: true } )
@@ -112,13 +124,26 @@
           this.todoName = '';
 
           this.$firestore.project.get()
-            .then( ( doc ) => {
-              const todo = doc.data().todos[ this.id ];
+            .then( (doc) => {
+
+              const group = doc.data().groups[this.groupId];
+              const todo = group.todos[ this.id ];
+
               this.$firestore.project.set( {
-                todos: {
-                  [this.id]: {
-                    ...todo,
-                    items: [ ...todo.items, item ],
+                groups: {
+                  ...doc.data().groups,
+                  [this.groupId]: {
+                    ...group,
+                    todos: {
+                      ...group.todos,
+                      [this.id]: {
+                        ...todo,
+                        items: [
+                          ...todo.items,
+                          item,
+                        ]
+                      }
+                    }
                   }
                 }
               }, { merge: true } )

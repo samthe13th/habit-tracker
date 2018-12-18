@@ -1,29 +1,62 @@
 <template>
   <div class="custom-modal new-todo">
+
     <h3>New Todo</h3>
+    {{ selectedGroup.name }}
+
+    <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="dropdownName(selectedGroup.name)">
+      <b-dropdown-item
+        v-for="group in project.groups"
+        @click="toggleGroup(group.id, group.name)"
+      >
+        {{ group.name === '_no-group' ? 'none' : group.name }}
+      </b-dropdown-item>
+    </b-dropdown>
+
     <input placeholder="Title" ref="titleInput" class="text-input " v-model="title" maxlength="60">
-    <br/>
-    <button :disabled="title === ''" class="action-button" @click="$emit('new-todo', title, projectId, formattedDate())">Create</button>
+
+    <!--<span v-for="group in project.groups">{{ group.name }}</span>-->
+
+    <button
+      :disabled="title === ''"
+      class="action-button"
+      @click="$emit('new-todo', title, projectId, selectedGroup.id, formattedDate())">
+      Create
+    </button>
+
   </div>
 </template>
 
 <script>
   import Vue from 'vue'
-
+  import { db } from '../../main'
   const date = new Date();
 
   export default {
     props: [
       'projectId',
     ],
+    firestore() {
+      return {
+        project: db.collection('Projects').doc(this.projectId),
+      };
+    },
     created() {
       console.log("PROJECT: ", this.projectId)
+      this.$firestore.project.get().then((doc) => {
+        console.log(doc.data().defaultGroup);
+        this.selectedGroup.id = doc.data().defaultGroup;
+      })
       this.$nextTick(() => {
         this.$refs.titleInput.focus();
       });
     },
     data() {
       return {
+        selectedGroup: {
+          id: '',
+          name: '_no-group',
+        },
         todoType: 'project',
         date: new Date(),
         title: '',
@@ -31,15 +64,44 @@
       }
     },
     methods: {
+      dropdownName(group) {
+        return group === '_no-group' ? 'group' : group;
+      },
       formattedDate() {
         return this.date.toLocaleDateString("en-US", this.dateOptions)
       },
+      toggleDropdown(event) {
+        console.log(event);
+      },
+      toggleGroup(id, name) {
+        this.selectedGroup = {
+          id,
+          name,
+        }
+        console.log('toggle group: ', id)
+      }
     },
   }
 
 </script>
 
 <style>
+  .group-dropdown {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+  }
+
+  .menu-dropdown {
+    background: white;
+    color: black;
+  }
+
+  .menu-dropdown:focus,
+  .menu-dropdown:hover {
+    background: white;
+  }
+
   .new-todo input {
     text-align: start;
     font-size: 20px;

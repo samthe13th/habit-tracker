@@ -1,6 +1,6 @@
 <template>
   <div @mouseover="mouseOver" class="todo-card">
-    <div class="todo-card__group-mark"></div>
+    <div class="todo-card__group-mark" v-bind:style="groupColor"></div>
     <div style="flex: 1">
       <h3>{{ name }}</h3>
     </div>
@@ -24,10 +24,15 @@
       'name',
       'items',
       'checked',
+      'color',
     ],
     data() {
       return {
-        overCard: false
+        overCard: false,
+        groupColor: {
+          borderLeft: `solid 20px ${this.color}`,
+          borderTop: `solid 20px ${this.color}`,
+        }
       }
     },
     methods: {
@@ -36,7 +41,7 @@
       },
       mouseOut() {
         this.overCard = false;
-      }
+      },
     }
   }
 </script>
@@ -45,9 +50,7 @@
 
   .todo-card__group-mark {
     border-radius: 10px 0;
-    border-left: solid 20px rgb(76, 219, 157);
     border-bottom: solid 20px transparent;
-    border-top: solid 20px rgb(76, 219, 157);
     border-right: solid 20px transparent;
     position: absolute;
     left: 0;

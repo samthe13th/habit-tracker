@@ -10,10 +10,10 @@
     </div>
 
     <div class="todos-list--wrapper">
-      <div v-for="project in projects" class="project-list">
+      <div v-for="project in projects" class="project-list project-card">
 
         <div style="margin-left: 20px; color: #2a4865; margin-bottom: 10px">
-          <h2>{{ project.name }} <span>({{ getPercent(project) }}%)</span></h2>
+          <h2>{{ project.name }} <!--<span>({{ getPercent(project) }}%)</span>--></h2>
 
           <span class="project-buttons-group">
             <button class="menu-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
@@ -30,7 +30,7 @@
       <new-project @new-project="newProject"/>
     </modal>
 
-    <modal name="new-todo-modal"  :width="400" @before-open="beforeOpen">
+    <modal name="new-todo-modal" :adaptive="true" :width="400" @before-open="beforeOpen">
       <new-todo :projectId="currentProjectId" @new-todo="newTodo"/>
     </modal>
 
@@ -106,9 +106,6 @@
       beforeOpen(event) {
         this.currentProjectId = event.params.projectId;
       },
-      newGroup(e) {
-        console.log("new group")
-      },
       openNewProjectModal() {
         this.$modal.show('new-project-modal');
       },
@@ -124,46 +121,70 @@
       newProject(title) {
         this.$modal.hide('new-project-modal');
         const projectRef = this.$firestore.projects.doc();
+        const defaultGroup = this.$firestore.groups.doc().id;
 
         db.collection("Projects")
           .doc(projectRef.id)
           .set(
             { name: title,
               id: projectRef.id,
-              todos: [],
+              defaultGroup,
+              groups: {
+                [defaultGroup]: {
+                  id: defaultGroup,
+                  name: '_no-group',
+                  color: '#ffffff',
+                  todos: {},
+                }
+              }
             });
       },
-      newTodo(name, projectId, created) {
-        const project = this.$firestore.projects.doc(projectId)
+      newGroup(projectId, name, color) {
+        console.log("new group: ", projectId, name, color);
+        this.$modal.hide('new-group-modal');
+
+        const project = this.$firestore.projects.doc(projectId);
+        const groupId = this.$firestore.groups.doc().id;
+
+        project.get().then((doc) => {
+          const groups = {
+            ...doc.data().groups,
+            [groupId]: { name, color, id: groupId, todos: [] }
+          };
+          project.set({ groups }, { merge: true })
+        })
+      },
+      newTodo(name, projectId, groupId, created) {
+        const project = this.$firestore.projects.doc(projectId);
 
         this.$modal.hide(`new-todo-modal`);
 
         const ref = this.$firestore.todos.doc();
+
         this.selectedTodoId = ref.id;
 
-        const groupId = this.$firestore.groups.doc().id;
-
          project.get()
-          .then( ( doc ) => {
-           const todos = {
-             ...doc.data().todos,
-              [this.selectedTodoId]: {
-               name,
-               type:    'project',
-               created,
-                groups: {
-                 [groupId]: {
-                   name: '',
-                   color: '#ffffff',
-                   items: []
-                 }
-               },
-               items:   [],
-               project: this.currentProjectId,
-               id:      this.selectedTodoId,
+          .then( (doc) => {
+            const group = doc.data().groups[groupId];
+            const groups = {
+              ...doc.data().groups,
+              [groupId]: {
+                ...group,
+                todos: [
+
+                ],
+                todos: {
+                  ...group.todos,
+                  [ref.id]: {
+                    name,
+                    items: [],
+                    created,
+                    type: 'project',
+                  }
+                }
               }
             };
-            project.set( { todos }, { merge: true } )
+            project.set( { groups }, { merge: true } )
           });
 
         setTimeout(() => {
@@ -177,6 +198,7 @@
 <style scoped>
 
   .project-buttons-group {
+    margin-top: 10px;
     display: flex;
     align-items: center;
   }
@@ -226,10 +248,13 @@
     overflow: scroll;
   }
 
-  .todos-list {
-    display: flex;
-    flex-wrap: wrap;
-    overflow: scroll;
+  .project-card {
+    background: rgb(227, 236, 246);
+    margin: 10px auto;
+    padding: 30px 10px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 1100px;
   }
 
   .todos-list--wrapper h5 {
