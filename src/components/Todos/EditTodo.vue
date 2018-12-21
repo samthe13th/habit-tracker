@@ -72,14 +72,22 @@
       deleteListItem( index ) {
         this.$firestore.project.get()
           .then( ( doc ) => {
-            const todo  = doc.data().todos[ this.id ];
-            const items = this.removeItem( doc.data().todos[ this.id ].items, index );
+            const groups = doc.data().groups;
+            const todo  = doc.data().groups[this.groupId].todos[ this.id ];
+            console.log(doc.data().groups[this.groupId].todos[this.id]);
+            const items = this.removeItem( todo.items, index );
 
             this.$firestore.project.set( {
-              todos: {
-                [this.id]: {
-                  ...todo,
-                  items
+              groups: {
+                ...groups,
+                [this.groupId]: {
+                  ...groups[this.groupId],
+                  todos: {
+                    [this.id]: {
+                      ...todo,
+                      items
+                    }
+                  }
                 }
               }
             }, { merge: true } )

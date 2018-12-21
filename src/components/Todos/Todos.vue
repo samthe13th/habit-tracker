@@ -94,19 +94,22 @@ export default {
     deleteTodo(groupId, todoId, projectId) {
       const project = this.$firestore.projects.doc(projectId);
 
-      console.log({project})
        project.get().then((doc) => {
-        const todos = doc.data().groups[groupId].todos;
-         project.set({
-           ...project,
-           groups: {
-             ...doc.data().groups,
-             [groupId]: {
-               ...doc.data().groups[groupId],
-               todos: todos
-             }
-           }
-         }, { merge: true })
+        console.log('project: ', doc.data())
+         const projectData = doc.data();
+        const todos = _.clone(projectData.groups[groupId].todos);
+        delete todos[todoId];
+        console.log({todos})
+        project.update({
+          ...projectData,
+          groups: {
+            ...projectData.groups,
+            [groupId]: {
+              ...projectData.groups[groupId],
+              todos: todos,
+            }
+          }
+        })
       })
     },
     openNewProjectModal() {
