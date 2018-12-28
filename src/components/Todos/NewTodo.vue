@@ -2,8 +2,6 @@
   <div class="custom-modal new-todo">
 
     <h3>New Todo</h3>
-    {{ selectedGroup.name }}
-
     <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="dropdownName(selectedGroup.name)">
       <b-dropdown-item
         v-for="group in project.groups"
@@ -88,8 +86,8 @@
 <style>
   .group-dropdown {
     position: absolute;
-    left: 10px;
-    top: 10px;
+    top: 20px;
+    right: 20px;
   }
 
   .menu-dropdown {

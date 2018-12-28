@@ -1,9 +1,7 @@
 <template>
   <div @mouseover="mouseOver" class="todo-card">
     <div class="todo-card__group-mark" v-bind:style="groupColor"></div>
-    <div style="flex: 1">
-      <h3>{{ name }}</h3>
-    </div>
+    <div class="todo-card__title">{{ name }}</div>
     <h5 class="todo-card__summary" style="margin-bottom: 30px">{{ checked.length }} / {{ items }}</h5>
     <div @mouseout="mouseOut" class="todo-card__overlay">
       <button @click="$emit('edit-todo')" class="todo-card__button action-button">Open</button>
@@ -29,7 +27,11 @@
     data() {
       return {
         overCard: false,
-        groupColor: {
+      }
+    },
+    computed: {
+      groupColor: function() {
+        return {
           borderLeft: `solid 20px ${this.color}`,
           borderTop: `solid 20px ${this.color}`,
         }
@@ -105,11 +107,13 @@
     padding: 15px;
     cursor: pointer;
     overflow: hidden;
+  }
 
-    h3 {
-      padding: 0;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
+  .todo-card__title {
+    flex: 1;
+    padding: 0;
+    font-size: 24px;
+    margin-top: 20px;
+    margin-bottom: 20px;
   }
 </style>

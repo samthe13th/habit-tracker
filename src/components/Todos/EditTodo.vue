@@ -1,24 +1,35 @@
 <template>
-  <div class="edit-modal" v-if="project.groups && project.groups[groupId].todos">
-    <div class="edit-modal__header">{{ project.groups[groupId].todos[id].name }}</div>
+  <div class="edit-modal" v-if="project.todos && project.todos[id]">
+   <div class="edit-modal__header">
+      {{ project.todos[id].name }}
+       <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="project.groups[project.todos[id].group].name">
+         <b-dropdown-item
+           @click="toggleGroup(group.id)"
+           v-for="group in project.groups"
+         >
+           {{ group.name === '_no-group' ? 'none' : group.name }}
+         </b-dropdown-item>
+       </b-dropdown>
+    </div>
 
-    <div
-      v-if="project.groups[groupId].todos"
-      class="edit-modal__content-list"
-      v-for="(item, index) in project.groups[groupId].todos[id].items">
+    <div style="overflow: auto">
+      <div
+        v-if="project.todos[id].items"
+        class="edit-modal__content-list"
+        v-for="(item, index) in project.todos[id].items">
 
-      <label class="container">
-        {{ item.name }}
-        <input
-          v-on:click="toggleTodoItem(index, item.name, $event)"
-          :value="item.name"
-          v-model="item.checked"
-          type="checkbox">
-        <span class="checkmark todo_checkmark"></span>
-      </label>
+        <label class="container">
+          {{ item.name }}
+          <input
+            v-on:click="toggleTodoItem(index, item.name, $event)"
+            :value="item.name"
+            v-model="item.checked"
+            type="checkbox">
+          <span class="checkmark todo_checkmark"></span>
+        </label>
 
-      <button class="x-button" @click="deleteListItem(index)">&#10761</button>
-
+        <button class="x-button" @click="deleteListItem(index)">&#10761</button>
+      </div>
     </div>
 
     <input
@@ -47,34 +58,74 @@
       return {
         checkedTodos: [],
         todoName: '',
-        content: document.getElementById( 'edit-modal-content' )
+        content: document.getElementById('edit-modal-content'),
       }
     },
     firestore() {
       return {
-        project:  db.collection( 'Projects' ).doc( this.projectId ),
+        project:  db.collection('Projects').doc( this.projectId ),
       };
     },
     created() {
-      console.log("EDIT");
-      console.log(this.$firestore.project)
-      this.$nextTick( () => {
-        // console.log(this.$refs.todoName)
-        // this.$refs.todoName.focus();
-      } );
+      console.log("edit... ", this.id)
     },
     methods: {
-      removeItem( list, index ) {
-        return list.filter( ( x, i ) => {
+      removeItem(list, index) {
+        return list.filter((x,i) => {
           return i !== index;
-        } );
+        });
+      },
+      toggleGroup(id) {
+        this.changeGroup(id, this.id);
+      },
+      changeGroup(newGroupId, todoId) {
+        console.log('new group: ', newGroupId)
+        console.log(this.$firestore.project);
+        const project = this.$firestore.project;
+
+        project.get().then((doc) => {
+          const projectData = doc.data();
+          const currentGroupId = _.clone(doc.data().todos[todoId].group);
+          const currentTodos = doc.data().groups[currentGroupId]
+            .todos
+            .filter(todo => todo !== todoId);
+
+          console.log('filtered: ', todoId, currentTodos);
+
+          project.set({
+            ...projectData,
+            todos: {
+              ...projectData.todos,
+              [todoId]: {
+                ...projectData.todos[todoId],
+                group: newGroupId,
+              },
+            },
+            groups: {
+              ...projectData.groups,
+              [currentGroupId]: {
+                ...projectData.groups[currentGroupId],
+                todos: currentTodos,
+              },
+              [newGroupId]: {
+                ...projectData.groups[newGroupId],
+                todos: [
+                  ...projectData.groups[newGroupId].todos,
+                  todoId
+                ]
+              }
+            }
+          }, { merge: true })
+        })
+      },
+      dropdownName(group) {
+        return group === '_no-group' ? 'group' : group;
       },
       deleteListItem( index ) {
         this.$firestore.project.get()
-          .then( ( doc ) => {
+          .then( (doc) => {
             const groups = doc.data().groups;
             const todo  = doc.data().groups[this.groupId].todos[ this.id ];
-            console.log(doc.data().groups[this.groupId].todos[this.id]);
             const items = this.removeItem( todo.items, index );
 
             this.$firestore.project.set( {
@@ -96,8 +147,7 @@
       toggleTodoItem( index, name, e ) {
         this.$firestore.project.get()
           .then( ( doc ) => {
-            const groups = doc.data().groups;
-            const todos = groups[this.groupId].todos;
+            const todos = doc.data().todos;
             const todo  = todos[ this.id ];
             const items = _.clone( todo.items );
 
@@ -107,17 +157,11 @@
             };
 
             this.$firestore.project.set( {
-              groups: {
-                ...groups,
-                [this.groupId]: {
-                  ...groups[this.groupId],
-                  todos: {
-                    ...todos,
-                    [this.id]: {
-                      ...todo,
-                      items
-                    }
-                  }
+              todos: {
+                ...todos,
+                [this.id]: {
+                  ...todo,
+                  items
                 }
               }
             }, { merge: true } )
@@ -133,17 +177,12 @@
 
           this.$firestore.project.get()
             .then( (doc) => {
-
-              const group = doc.data().groups[this.groupId];
-              const todo = group.todos[ this.id ];
+              const todos = doc.data().todos;
+              const todo = todos[this.id];
 
               this.$firestore.project.set( {
-                groups: {
-                  ...doc.data().groups,
-                  [this.groupId]: {
-                    ...group,
                     todos: {
-                      ...group.todos,
+                      ...todos,
                       [this.id]: {
                         ...todo,
                         items: [
@@ -152,8 +191,6 @@
                         ]
                       }
                     }
-                  }
-                }
               }, { merge: true } )
             });
         }
@@ -163,12 +200,14 @@
 </script>
 
 <style scoped>
+
   .edit-modal .text-input {
     padding: 0 10px;
     border: solid 1px lightgrey;
     margin: 20px;
     width: calc(100% - 60px);
     border-radius: 5px;
+    flex-shrink: 0;
   }
 
   .edit-modal .text-input:focus {

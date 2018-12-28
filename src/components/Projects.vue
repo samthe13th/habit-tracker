@@ -134,9 +134,9 @@
                   id: defaultGroup,
                   name: '_no-group',
                   color: '#ffffff',
-                  todos: {},
+                  todos: [],
                 }
-              }
+              },
             });
       },
       newGroup(projectId, name, color) {
@@ -147,11 +147,17 @@
         const groupId = this.$firestore.groups.doc().id;
 
         project.get().then((doc) => {
-          const groups = {
-            ...doc.data().groups,
-            [groupId]: { name, color, id: groupId, todos: [] }
-          };
-          project.set({ groups }, { merge: true })
+          project.set({
+            groups: {
+              ...doc.data().groups,
+              [groupId]: {
+                id: groupId,
+                name,
+                color,
+                todos: [],
+              }
+            }
+          }, { merge: true })
         })
       },
       newTodo(name, projectId, groupId, created) {
@@ -165,30 +171,33 @@
 
          project.get()
           .then( (doc) => {
-            const group = doc.data().groups[groupId];
-            const groups = {
-              ...doc.data().groups,
-              [groupId]: {
-                ...group,
-                todos: [
-
-                ],
-                todos: {
-                  ...group.todos,
-                  [ref.id]: {
-                    name,
-                    items: [],
-                    created,
-                    type: 'project',
-                  }
+            project.set({
+              todos: {
+                ...doc.data().todos,
+                [ref.id]: {
+                  name,
+                  id: ref.id,
+                  group: groupId,
+                  items: [],
+                  created,
+                  type: 'project',
+                }
+              },
+              groups: {
+                ...doc.data().groups,
+                [groupId]: {
+                  ...doc.data().groups[ groupId ],
+                  todos: [
+                    ...doc.data().groups[ groupId ].todos,
+                    ref.id
+                  ]
                 }
               }
-            };
-            project.set( { groups }, { merge: true } )
+            }, { merge: true });
           });
 
         setTimeout(() => {
-          this.openEditModal(ref.id, created);
+         // this.openEditModal(ref.id, created);
         }, 100)
       },
     }
@@ -201,6 +210,7 @@
     margin-top: 10px;
     display: flex;
     align-items: center;
+    margin-bottom: 30px;
   }
 
   .project-buttons-group button {

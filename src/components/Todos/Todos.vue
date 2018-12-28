@@ -2,8 +2,36 @@
   <div class="module">
 
     <div v-if="project">
+      <template
+        v-if="project.groups"
+        v-for="group in project.groups">
+        <h5 class="group-header" v-if="group.name !== '_no-group'">{{ group.name }}</h5>
+        <em
+          style="margin-left: 20px"
+          v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
+          No todos in this group yet!
+        </em>
+        <div class="todos-list">
+          <template
+            v-if="group.todos && project.todos"
+            v-for="(id, index) in group.todos">
+            <todo-card
+              v-if="project.todos[id]"
+              :project="project.todos[id].project"
+              :id="index"
+              :name="project.todos[id].name"
+              :items="items(project.todos[id].items)"
+              :checked="checked(project.todos[id].items)"
+              :color="project.groups[project.todos[id].group].color"
+              @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
+              @delete-todo="deleteTodo(project.todos[id].group, id, project.id)"
+            ></todo-card>
+          </template>
+        </div>
+      </template>
+
      <!-- <em style="margin-left: 20px" v-if="project.groups[project.defaultGroup].todos.length === 0">No todos in this project yet!</em>-->
-      <div v-if="Object.keys(group.todos).length > 0" v-for="group in project.groups" class="group-card">
+<!--      <div v-if="Object.keys(group.todos).length > 0" v-for="group in project.groups" class="group-card">
         <h5 class="group-header" v-if="group.name !== '_no-group'">{{ group.name }}</h5>
         <div class="todos-list">
           <todo-card
@@ -19,7 +47,7 @@
             @delete-todo="deleteTodo(group.id, index, project.id)"
           ></todo-card>
         </div>
-      </div>
+      </div>-->
     </div>
 
     <modal :name="`${project.id}__edit-todo`" :adaptive="true" :height="'90%'" :draggable="true">
@@ -76,17 +104,20 @@ export default {
     };
   },
   methods: {
+    items(items) {
+      return items ? items.length : 0;
+    },
     checked(list) {
-      return list.filter(item => item.checked);
+      return list ? list.filter(item => item.checked): 0;
     },
     beforeOpen(event) {
       this.currentProjectId = event.params.projectId;
     },
     openEditModal(groupId, id, date) {
+      console.log('open... ', groupId)
       this.selectedTodo = {
         groupId, id, date
       };
-      console.log('open.... ', this.selectedTodo)
       this.selectedTodoId = id;
       this.selectedTodoDate = date;
       this.$modal.show(`${this.project.id}__edit-todo`);
@@ -95,11 +126,9 @@ export default {
       const project = this.$firestore.projects.doc(projectId);
 
        project.get().then((doc) => {
-        console.log('project: ', doc.data())
          const projectData = doc.data();
         const todos = _.clone(projectData.groups[groupId].todos);
         delete todos[todoId];
-        console.log({todos})
         project.update({
           ...projectData,
           groups: {
@@ -196,7 +225,6 @@ export default {
     display: flex;
     flex-wrap: wrap;
     overflow: scroll;
-    margin-top: 15px;
     margin-bottom: 15px;
   }
 
