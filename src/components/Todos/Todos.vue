@@ -3,7 +3,7 @@
   <div v-if="project">
     <div
       v-if="project.groups && (Object.keys(project.groups).length > 1 || Object.keys(project.todos).length > 0)"
-      v-for="group in sortedList(project.groups, 'abc', 'name')"
+      v-for="group in sortedList(project.groups, 'name')"
       class="group-wrapper"
     >
       <div class="group-header" v-if="group.name !== '_no-group'">
@@ -62,7 +62,7 @@
       </edit-todo>
     </modal>
 
-    <modal name="edit-group-modal" :width="400" :height="'auto'">
+    <modal :name="`${project.id}__edit-group-modal`" :width="400" :height="'auto'">
       <form-dialog
         title="Edit Group"
         :inputs="[
@@ -78,10 +78,10 @@
             groupColor: selectedGroup.color,
           }
         }"
-        @edit-group="editGroup"/>
+        @edit-group="editGroup" />
     </modal>
 
-    <modal name="new-todo-modal" :width="400" :height="'auto'">
+    <modal :name="`${project.id}__new-todo-modal`" :width="400" :height="'auto'">
       <form-dialog
         title="New Todo"
         :inputs="[
@@ -95,12 +95,12 @@
             todoName: '',
           }
         }"
-        @new-todo="newTodo"/>
+        @new-todo="newTodo" />
     </modal>
 
-    <modal name="delete-group-modal" :width="400" :height="'auto'">
+    <modal :name="`${ project.id }__delete-group-modal`" :width="400" :height="'auto'">
       <confirmation-dialog
-        message="Are you sure you want to delete this group?"
+        message="Are you sure you want to delete this group? The todos inside will not be deleted."
         output="delete-group"
         @delete-group="deleteGroup"
       >
@@ -112,161 +112,201 @@
 
 
 <script>
-import firebase from 'firebase'
-import * as _ from 'lodash'
-import { db } from '../../main'
-import TodoCard from './TodoCard'
-import EditTodo from './EditTodo'
-import NewProject from './NewProject'
-import FormDialog from './FormDialog'
-import ConfirmationDialog from './ConfirmationDialog'
+  import firebase from 'firebase'
+  import * as _ from 'lodash'
+  import { db } from '../../main'
+  import TodoCard from './TodoCard'
+  import EditTodo from './EditTodo'
+  import NewProject from './NewProject'
+  import FormDialog from './FormDialog'
+  import ConfirmationDialog from './ConfirmationDialog'
 
-export default {
-  name: 'Todos',
-  props: [
-    "project"
-  ],
-  data() {
-    return {
-      selectedTodoType: '',
-      selectedTodoId: '',
-      selectedTodoDate: '',
-      selectedTodoDateRef: null,
-      selectedTodo: {
-        id: '',
-        groupId: '',
-        date: '',
-      },
-      selectedGroup: {
-        id: '',
-        name: ''
+  export default {
+    name:       'Todos',
+    props:      [
+      "project"
+    ],
+    data() {
+      return {
+        selectedTodoType:    '',
+        selectedTodoId:      '',
+        selectedTodoDate:    '',
+        selectedTodoDateRef: null,
+        selectedTodo:        {
+          id:      '',
+          groupId: '',
+          date:    '',
+        },
+        selectedGroup:       {
+          id:   '',
+          name: ''
+        }
       }
-    }
-  },
-  components: {
-    TodoCard,
-    EditTodo,
-    NewProject,
-    FormDialog,
-    ConfirmationDialog,
-  },
-  firestore() {
-    return {
-      todos: db.collection('Todos'),
-      projects: db.collection('Projects'),
-    };
-  },
-  methods: {
-    items(items) {
-      return items ? items.length : 0;
     },
-    checked(list) {
-      return list ? list.filter(item => item.checked): 0;
+    components: {
+      TodoCard,
+      EditTodo,
+      NewProject,
+      FormDialog,
+      ConfirmationDialog,
     },
-    beforeOpen(event) {
-      this.currentProjectId = event.params.projectId;
-    },
-    openEditModal(groupId, id, date) {
-      console.log('open... ', groupId)
-      this.selectedTodo = {
-        groupId, id, date
+    firestore() {
+      return {
+        todos:    db.collection( 'Todos' ),
+        projects: db.collection( 'Projects' ),
       };
-      this.selectedTodoId = id;
-      this.selectedTodoDate = date;
-      this.$modal.show(`${this.project.id}__edit-todo`);
     },
-    openNewTodoModal(groupId) {
-      this.$modal.show('new-todo-modal');
-    },
-    openGroupEditModal(groupId, groupName, groupColor) {
-      this.selectedGroup = { id: groupId, name: groupName, color: groupColor };
-      console.log("select... ", this.selectedGroup);
-      this.$modal.show('edit-group-modal');
-    },
-    openGroupDeleteModal(groupId) {
-      console.log({groupId});
-      this.$modal.show('delete-group-modal');
-    },
-    deleteTodo(groupId, todoId, projectId) {
-      const project = this.$firestore.projects.doc(projectId);
+    methods:    {
+      items( items ) {
+        return items ? items.length : 0;
+      },
+      checked( list ) {
+        return list ? list.filter( item => item.checked ) : 0;
+      },
+      beforeOpen( event ) {
+        this.currentProjectId = event.params.projectId;
+      },
+      openEditModal( groupId, id, date ) {
+        console.log( 'open... ', groupId )
+        this.selectedTodo     = {
+          groupId,
+          id,
+          date
+        };
+        this.selectedTodoId   = id;
+        this.selectedTodoDate = date;
+        this.$modal.show( `${this.project.id}__edit-todo` );
+      },
+      openNewTodoModal( groupId ) {
+        this.$modal.show( `${this.project.id}__new-todo-modal` );
+      },
+      openGroupEditModal( groupId, groupName, groupColor ) {
+        this.selectedGroup =
+          {
+            id:    groupId,
+            name:  groupName,
+            color: groupColor
+          };
+        console.log( "select... ", this.selectedGroup );
+        this.$modal.show( `${this.project.id}__edit-group-modal` );
+      },
+      openGroupDeleteModal( groupId ) {
+        console.log( { groupId } );
+        this.selectedGroup.id = groupId;
+        console.log( 'selectedGroup: ', this.selectedGroup.id )
+        this.$modal.show( `${this.project.id}__delete-group-modal` );
+      },
+      deleteTodo( groupId, todoId, projectId ) {
+        const project = this.$firestore.projects.doc( projectId );
 
-       project.get().then((doc) => {
-         const projectData = doc.data();
-        const todos = _.clone(projectData.groups[groupId].todos);
-        delete todos[todoId];
-        project.update({
-          ...projectData,
-          groups: {
-            ...projectData.groups,
-            [groupId]: {
-              ...projectData.groups[groupId],
-              todos: todos,
-            }
-          }
-        })
-      })
-    },
-    editGroup(params) {
-      console.log({params})
-      const project = this.$firestore.projects.doc(params.projectId);
-      this.$modal.hide('edit-group-modal');
+        project.get()
+          .then( ( doc ) => {
+            const projectData = doc.data();
+            const todos       = _.clone( projectData.groups[ groupId ].todos );
+            delete todos[ todoId ];
+            project.update( {
+              ...projectData,
+              groups: {
+                ...projectData.groups,
+                [groupId]: {
+                  ...projectData.groups[ groupId ],
+                  todos: todos,
+                }
+              }
+            } )
+          } )
+      },
+      deleteGroup(confirm) {
+        this.$modal.hide( `${this.project.id}__delete-group-modal` );
+        if (confirm === false) return;
 
-      project.get().then((doc) => {
-        const group = doc.data().groups[params.groupId];
-        project.set({
-          groups: {
-            ...project.groups,
-            [params.groupId]: {
-              ...group,
-              name: params.groupName,
-              color: params.groupColor,
-            }
-          }
-        }, { merge: true });
-      });
-    },
-    openNewProjectModal() {
-      this.$modal.show('new-project-modal');
-    },
-    deleteGroup(confirm) {
-      console.log('dialog group: ', confirm);
-      this.$modal.hide('delete-group-modal');
-    },
-    newProject(title) {
-      this.$modal.hide('new-project-modal');
-      const projectRef = this.$firestore.projects.doc();
+        const project = this.$firestore.projects.doc( this.project.id );
 
-      db.collection("Projects")
-        .doc(projectRef.id)
-        .set(
-          { name: title,
-            id: projectRef.id,
-            todos: {},
-          });
-    },
-    createHabit(newHabit) {
-      this.$modal.hide('add-habit-modal');
-      if (newHabit.period === 'daily') {
-        const ref = db.collection('DailyHabits').doc();
-        const id = ref.id;
-        ref.set({ ...newHabit, id, private: false });
+        project.get()
+          .then( ( doc ) => {
+            const groups = _.clone(doc.data().groups);
+            const defaultGroup = doc.data().defaultGroup;
+            delete groups[this.selectedGroup.id];
+
+            let todos = doc.data().todos;
+
+            _.each(doc.data().groups[this.selectedGroup.id].todos, (id) => {
+              groups[defaultGroup].todos.push(id);
+              todos[id].group = defaultGroup;
+            });
+
+            project.update({
+              groups,
+              todos,
+            })
+          } );
+
+      },
+      editGroup( params ) {
+        console.log( { params } )
+        const project = this.$firestore.projects.doc( params.projectId );
+        this.$modal.hide( `${this.project.id}__edit-group-modal` );
+
+        project.get()
+          .then( ( doc ) => {
+            const group = doc.data().groups[ params.groupId ];
+            project.set( {
+              groups: {
+                ...project.groups,
+                [params.groupId]: {
+                  ...group,
+                  name:  params.groupName,
+                  color: params.groupColor,
+                }
+              }
+            }, { merge: true } );
+          } );
+      },
+      openNewProjectModal() {
+        this.$modal.show( 'new-project-modal' );
+      },
+      newProject( title ) {
+        this.$modal.hide( 'new-project-modal' );
+        const projectRef = this.$firestore.projects.doc();
+
+        db.collection( "Projects" )
+          .doc( projectRef.id )
+          .set(
+            {
+              name:  title,
+              id:    projectRef.id,
+              todos: {},
+            } );
+      },
+      createHabit( newHabit ) {
+        this.$modal.hide( 'add-habit-modal' );
+        if( newHabit.period === 'daily' ) {
+          const ref = db.collection( 'DailyHabits' )
+            .doc();
+          const id  = ref.id;
+          ref.set( {
+            ...newHabit,
+            id,
+            private: false
+          } );
+        }
+      },
+      newTodo( params ) {
+        console.log( 'new todo: ', params );
+      },
+      sortedList( list, onParam ) {
+        console.log( 'sort: ', _.sortBy( list, ( item ) => item[ onParam ] ) );
+        return _.sortBy( list, item => item.name );
       }
-    },
-    newTodo(params) {
-      console.log('new todo: ', params);
-    },
-    sortedList(list, method, onParam) {
-      console.log('sort: ', _.sortBy(list, (item) => item.name));
-      return _.sortBy(list, item => item.name);
     }
   }
-}
 </script>
 
 <style scoped>
   .group-wrapper {
     margin-top: 30px;
   }
+
   .group-card {
     display: flex;
     flex-direction: column;
@@ -307,7 +347,7 @@ export default {
   }
 
   .toolbar {
-    background:#fb7979;
+    background: #fb7979;
     height: 60px;
     display: flex;
     flex-shrink: 0;

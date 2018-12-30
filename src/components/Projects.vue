@@ -19,7 +19,7 @@
             <button class="menu-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
             <button class="menu-button" v-on:click="openNewGroupModal(project.id)">New Group</button>
             <button v-on:click="openEditProjectModal(project.id, project.name)" class="todo-card__button menu-button">Edit Project</button>
-            <button v-on:click="deleteProject(project.id)" class="todo-card__button menu-button">Delete Project</button>
+            <button v-on:click="openDeleteProjectModal(project.id)" class="todo-card__button menu-button">Delete Project</button>
           </span>
         </div>
 
@@ -53,6 +53,15 @@
       <new-group :projectId="currentProjectId" @new-group="newGroup"/>
     </modal>
 
+    <modal name="delete-project-modal" :width="400" :height="'auto'">
+      <confirmation-dialog
+        message="Are you sure you want to delete this project? All todos inside will be deleted."
+        output="delete-project"
+        @delete-project="deleteProject"
+      >
+      </confirmation-dialog>
+    </modal>
+
   </div>
 </template>
 
@@ -68,6 +77,7 @@
   import NewGroup from './Todos/NewGroup'
   import Todos from './Todos/Todos'
   import FormDialog from './Todos/FormDialog'
+  import ConfirmationDialog from './Todos/ConfirmationDialog'
 
   export default {
     name: 'Projects',
@@ -90,6 +100,7 @@
       Todos,
       NewGroup,
       FormDialog,
+      ConfirmationDialog,
     },
     firestore() {
       return {
@@ -122,7 +133,6 @@
         return list.filter(item => item.checked);
       },
       beforeOpen(event) {
-        console.log('before open: ', event.params)
         const params = event.params;
         if (params.projectId) {
           this.currentProjectId = event.params.projectId;
@@ -137,11 +147,17 @@
       openNewGroupModal(projectId) {
         this.$modal.show('new-group-modal', { projectId });
       },
+      openDeleteProjectModal(projectId) {
+        this.currentProjectId = projectId;
+        this.$modal.show('delete-project-modal');
+      },
       openNewTodoModal(projectId) {
         this.$modal.show('new-todo-modal', { projectId });
       },
-      deleteProject(id) {
-        this.$firestore.projects.doc(id).delete();
+      deleteProject(confirm) {
+        this.$modal.hide('delete-project-modal');
+        if (confirm === false) return;
+        this.$firestore.projects.doc(this.currentProjectId).delete();
       },
       openEditProjectModal(projectId, projectName) {
         console.log('open edit...', projectId)
@@ -169,16 +185,13 @@
             });
       },
       editProject(params) {
-        console.log('EDIT: ', {params})
         const project = this.$firestore.projects.doc(params.projectId);
-        console.log("PROJECT: ", project)
         project.set({
           name: params.projectName
         }, { merge: true });
         this.$modal.hide('edit-project-modal');
       },
       newGroup(projectId, name, color) {
-        console.log("new group: ", projectId, name, color);
         this.$modal.hide('new-group-modal');
 
         const project = this.$firestore.projects.doc(projectId);
