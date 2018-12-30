@@ -103,7 +103,7 @@
     height: 200px;
     border-radius: 8px;
     background: white;
-    margin: 20px;
+    margin: 10px;
     padding: 15px;
     cursor: pointer;
     overflow: hidden;

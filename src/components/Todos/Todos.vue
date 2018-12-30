@@ -1,53 +1,53 @@
 <template>
-  <div class="module">
 
-    <div v-if="project">
-      <template
-        v-if="project.groups"
-        v-for="group in project.groups">
-        <h5 class="group-header" v-if="group.name !== '_no-group'">{{ group.name }}</h5>
-        <em
-          style="margin-left: 20px"
-          v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
-          No todos in this group yet!
-        </em>
-        <div class="todos-list">
-          <template
-            v-if="group.todos && project.todos"
-            v-for="(id, index) in group.todos">
-            <todo-card
-              v-if="project.todos[id]"
-              :project="project.todos[id].project"
-              :id="index"
-              :name="project.todos[id].name"
-              :items="items(project.todos[id].items)"
-              :checked="checked(project.todos[id].items)"
-              :color="project.groups[project.todos[id].group].color"
-              @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
-              @delete-todo="deleteTodo(project.todos[id].group, id, project.id)"
-            ></todo-card>
-          </template>
-        </div>
-      </template>
+  <div v-if="project">
+    <div
+      v-if="project.groups && (Object.keys(project.groups).length > 1 || Object.keys(project.todos).length > 0)"
+      v-for="group in project.groups"
+      class="group-wrapper"
+    >
+      <div class="group-header" v-if="group.name !== '_no-group'">
+        <div class="group-header__swatch" v-bind:style="{ 'background': group.color }"></div>
+        <div>{{ group.name }}</div>
+        <button
+          v-on:click="openGroupEditModal(group.id, group.name, group.color)"
+          style="font-size: 16px; margin-left: 10px"
+          class="todo-card__button menu-button">
+          Edit
+        </button>
+        <button
+          v-on:click="openGroupDeleteModal(group.id)"
+          style="font-size: 16px; margin-left: 10px"
+          class="todo-card__button menu-button">
+          Delete
+        </button>
+      </div>
 
-     <!-- <em style="margin-left: 20px" v-if="project.groups[project.defaultGroup].todos.length === 0">No todos in this project yet!</em>-->
-<!--      <div v-if="Object.keys(group.todos).length > 0" v-for="group in project.groups" class="group-card">
-        <h5 class="group-header" v-if="group.name !== '_no-group'">{{ group.name }}</h5>
-        <div class="todos-list">
+      <em style="margin-left: 20px; font-size: 16px"
+        v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
+        No todos in this group yet!
+      </em>
+
+      <div class="todos-list">
+
+        <template
+          v-if="group.todos && project.todos"
+          v-for="(id, index) in group.todos">
           <todo-card
-            v-if="group.todos"
-            v-for="(todo, index) in group.todos"
-            :project="todo.project"
+            v-if="project.todos[id]"
+            :project="project.todos[id].project"
             :id="index"
-            :name="todo.name"
-            :items="todo.items.length"
-            :checked="checked(todo.items)"
-            :color="group.color"
-            @edit-todo="openEditModal(group.id, index, todo.created)"
-            @delete-todo="deleteTodo(group.id, index, project.id)"
+            :name="project.todos[id].name"
+            :items="items(project.todos[id].items)"
+            :checked="checked(project.todos[id].items)"
+            :color="project.groups[project.todos[id].group].color"
+            @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
+            @delete-todo="deleteTodo(project.todos[id].group, id, project.id)"
           ></todo-card>
-        </div>
-      </div>-->
+        </template>
+
+      </div>
+
     </div>
 
     <modal :name="`${project.id}__edit-todo`" :adaptive="true" :height="'90%'" :draggable="true">
@@ -62,6 +62,51 @@
       </edit-todo>
     </modal>
 
+    <modal name="edit-group-modal" :width="400" :height="'auto'">
+      <form-dialog
+        title="Edit Group"
+        :inputs="[
+          { type: 'text-input', class: 'text-input', label: 'Name', name: 'groupName' },
+          { type: 'color', class: '', label: 'Color', name: 'groupColor' }
+        ]"
+        :output="{
+          name: 'edit-group',
+          params: {
+            projectId: project.id,
+            groupId: selectedGroup.id,
+            groupName: selectedGroup.name,
+            groupColor: selectedGroup.color,
+          }
+        }"
+        @edit-group="editGroup"/>
+    </modal>
+
+    <modal name="new-todo-modal" :width="400" :height="'auto'">
+      <form-dialog
+        title="New Todo"
+        :inputs="[
+          { type: 'text-input', class: 'text-input', label: 'Name', name: 'todoName' },
+        ]"
+        :output="{
+          name: 'new-todo',
+          params: {
+            projectId: project.id,
+            groupId: selectedGroup.id,
+            todoName: '',
+          }
+        }"
+        @new-todo="newTodo"/>
+    </modal>
+
+    <modal name="delete-group-modal" :width="400" :height="'auto'">
+      <confirmation-dialog
+        message="Are you sure you want to delete this group?"
+        output="delete-group"
+        @delete-group="deleteGroup"
+      >
+      </confirmation-dialog>
+    </modal>
+
   </div>
 </template>
 
@@ -73,6 +118,8 @@ import { db } from '../../main'
 import TodoCard from './TodoCard'
 import EditTodo from './EditTodo'
 import NewProject from './NewProject'
+import FormDialog from './FormDialog'
+import ConfirmationDialog from './ConfirmationDialog'
 
 export default {
   name: 'Todos',
@@ -89,6 +136,10 @@ export default {
         id: '',
         groupId: '',
         date: '',
+      },
+      selectedGroup: {
+        id: '',
+        name: ''
       }
     }
   },
@@ -96,6 +147,8 @@ export default {
     TodoCard,
     EditTodo,
     NewProject,
+    FormDialog,
+    ConfirmationDialog,
   },
   firestore() {
     return {
@@ -122,6 +175,18 @@ export default {
       this.selectedTodoDate = date;
       this.$modal.show(`${this.project.id}__edit-todo`);
     },
+    openNewTodoModal(groupId) {
+      this.$modal.show('new-todo-modal');
+    },
+    openGroupEditModal(groupId, groupName, groupColor) {
+      this.selectedGroup = { id: groupId, name: groupName, color: groupColor };
+      console.log("select... ", this.selectedGroup);
+      this.$modal.show('edit-group-modal');
+    },
+    openGroupDeleteModal(groupId) {
+      console.log({groupId});
+      this.$modal.show('delete-group-modal');
+    },
     deleteTodo(groupId, todoId, projectId) {
       const project = this.$firestore.projects.doc(projectId);
 
@@ -141,8 +206,31 @@ export default {
         })
       })
     },
+    editGroup(params) {
+      console.log({params})
+      const project = this.$firestore.projects.doc(params.projectId);
+      this.$modal.hide('edit-group-modal');
+
+      project.get().then((doc) => {
+        const group = doc.data().groups[params.groupId];
+        project.set({
+          groups: {
+            ...project.groups,
+            [params.groupId]: {
+              ...group,
+              name: params.groupName,
+              color: params.groupColor,
+            }
+          }
+        }, { merge: true });
+      });
+    },
     openNewProjectModal() {
       this.$modal.show('new-project-modal');
+    },
+    deleteGroup(confirm) {
+      console.log('dialog group: ', confirm);
+      this.$modal.hide('delete-group-modal');
     },
     newProject(title) {
       this.$modal.hide('new-project-modal');
@@ -164,12 +252,17 @@ export default {
         ref.set({ ...newHabit, id, private: false });
       }
     },
+    newTodo(params) {
+      console.log('new todo: ', params);
+    }
   }
 }
 </script>
 
 <style scoped>
-
+  .group-wrapper {
+    margin-top: 30px;
+  }
   .group-card {
     display: flex;
     flex-direction: column;
@@ -177,7 +270,17 @@ export default {
   }
 
   .group-header {
+    font-size: 24px;
+    display: flex;
     margin: 10px 20px 0 20px;
+  }
+
+  .group-header__swatch {
+    width: 30px;
+    height: 30px;
+    border: solid white;
+    margin-right: 10px;
+    border-radius: 100%;
   }
 
   .todo-button {
@@ -225,7 +328,7 @@ export default {
     display: flex;
     flex-wrap: wrap;
     overflow: scroll;
-    margin-bottom: 15px;
+    margin-left: 10px;
   }
 
 </style>

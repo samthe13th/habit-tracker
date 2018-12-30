@@ -12,12 +12,13 @@
     <div class="todos-list--wrapper">
       <div v-for="project in projects" class="project-list project-card">
 
-        <div style="margin-left: 20px; color: #2a4865; margin-bottom: 10px">
+        <div style="margin-left: 20px; color: #2a4865">
           <h2>{{ project.name }} <!--<span>({{ getPercent(project) }}%)</span>--></h2>
 
           <span class="project-buttons-group">
             <button class="menu-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
             <button class="menu-button" v-on:click="openNewGroupModal(project.id)">New Group</button>
+            <button v-on:click="openEditProjectModal(project.id, project.name)" class="todo-card__button menu-button">Edit Project</button>
             <button v-on:click="deleteProject(project.id)" class="todo-card__button menu-button">Delete Project</button>
           </span>
         </div>
@@ -30,11 +31,25 @@
       <new-project @new-project="newProject"/>
     </modal>
 
+    <modal name="edit-project-modal" :width="400" :height="'auto'" :adaptive="true" @before-open="beforeOpen">
+      <form-dialog
+        title="Edit Project"
+        :inputs="[{ type: 'text-input', class: 'text-input',label: 'Name', name: 'projectName' }]"
+        :output="{
+          name: 'edit-project',
+          params: {
+            projectId: currentProjectId,
+            projectName: currentProjectName
+          }
+        }"
+        @edit-project="editProject"/>
+    </modal>
+
     <modal name="new-todo-modal" :adaptive="true" :width="400" @before-open="beforeOpen">
       <new-todo :projectId="currentProjectId" @new-todo="newTodo"/>
     </modal>
 
-    <modal name="new-group-modal" :height="450" :width="400" @before-open="beforeOpen">
+    <modal name="new-group-modal" :adaptive="true" :height="400" :width="400" @before-open="beforeOpen">
       <new-group :projectId="currentProjectId" @new-group="newGroup"/>
     </modal>
 
@@ -52,6 +67,7 @@
   import NewProject from './Todos/NewProject'
   import NewGroup from './Todos/NewGroup'
   import Todos from './Todos/Todos'
+  import FormDialog from './Todos/FormDialog'
 
   export default {
     name: 'Projects',
@@ -62,6 +78,7 @@
         selectedTodoDate: '',
         selectedTodoDateRef: null,
         currentProjectId: '',
+        currentProjectName: '',
         projectPercent: '0',
       }
     },
@@ -72,6 +89,7 @@
       NewProject,
       Todos,
       NewGroup,
+      FormDialog,
     },
     firestore() {
       return {
@@ -104,7 +122,14 @@
         return list.filter(item => item.checked);
       },
       beforeOpen(event) {
-        this.currentProjectId = event.params.projectId;
+        console.log('before open: ', event.params)
+        const params = event.params;
+        if (params.projectId) {
+          this.currentProjectId = event.params.projectId;
+        }
+        if (params.projectName) {
+          this.currentProjectName = event.params.projectName;
+        }
       },
       openNewProjectModal() {
         this.$modal.show('new-project-modal');
@@ -117,6 +142,10 @@
       },
       deleteProject(id) {
         this.$firestore.projects.doc(id).delete();
+      },
+      openEditProjectModal(projectId, projectName) {
+        console.log('open edit...', projectId)
+        this.$modal.show('edit-project-modal', { projectId, projectName });
       },
       newProject(title) {
         this.$modal.hide('new-project-modal');
@@ -138,6 +167,15 @@
                 }
               },
             });
+      },
+      editProject(params) {
+        console.log('EDIT: ', {params})
+        const project = this.$firestore.projects.doc(params.projectId);
+        console.log("PROJECT: ", project)
+        project.set({
+          name: params.projectName
+        }, { merge: true });
+        this.$modal.hide('edit-project-modal');
       },
       newGroup(projectId, name, color) {
         console.log("new group: ", projectId, name, color);
@@ -210,7 +248,6 @@
     margin-top: 10px;
     display: flex;
     align-items: center;
-    margin-bottom: 30px;
   }
 
   .project-buttons-group button {

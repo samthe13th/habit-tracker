@@ -28,5 +28,4 @@
     width: calc(100% - 60px);
     border-radius: 5px;
   }
-
 </style>
