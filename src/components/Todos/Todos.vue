@@ -1,8 +1,9 @@
 <template>
 
-  <div v-if="project">
+  <div v-if="project && project.groups && project.todos">
+
     <div
-      v-if="project.groups && (Object.keys(project.groups).length > 1 || Object.keys(project.todos).length > 0)"
+      v-if="(Object.keys(project.groups).length > 1 || Object.keys(project.todos).length > 0)"
       v-for="group in sortedList(project.groups, 'name')"
       class="group-wrapper"
     >
@@ -23,16 +24,14 @@
         </button>
       </div>
 
-      <em style="margin-left: 20px; font-size: 16px"
-        v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
-        No todos in this group yet!
-      </em>
-
       <div class="todos-list">
-
         <template
-          v-if="group.todos && project.todos"
+          v-if="group.todos.length > 0 && project.todos"
           v-for="(id, index) in group.todos">
+          <em style="margin-left: 20px; font-size: 16px"
+            v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
+            No todos in this group yet!
+          </em>
           <todo-card
             v-if="project.todos[id]"
             :project="project.todos[id].project"
@@ -42,7 +41,7 @@
             :checked="checked(project.todos[id].items)"
             :color="project.groups[project.todos[id].group].color"
             @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
-            @delete-todo="deleteTodo(project.todos[id].group, id, project.id)"
+            @delete-todo="openDeleteTodoModal(project.todos[id].group, id)"
           ></todo-card>
         </template>
 
@@ -57,7 +56,6 @@
         :date="selectedTodo.date"
         :projectId="project.id"
         :groupId="selectedTodo.groupId"
-        :type="selectedTodoType"
         :id="selectedTodo.id">
       </edit-todo>
     </modal>
@@ -107,6 +105,15 @@
       </confirmation-dialog>
     </modal>
 
+    <modal :name="`${ project.id }__delete-todo-modal`" :width="400" :height="'auto'">
+      <confirmation-dialog
+        message="Are you sure you want to delete this todo?"
+        output="delete-todo"
+        @delete-todo="deleteTodo"
+      >
+      </confirmation-dialog>
+    </modal>
+
   </div>
 </template>
 
@@ -128,10 +135,6 @@
     ],
     data() {
       return {
-        selectedTodoType:    '',
-        selectedTodoId:      '',
-        selectedTodoDate:    '',
-        selectedTodoDateRef: null,
         selectedTodo:        {
           id:      '',
           groupId: '',
@@ -196,25 +199,42 @@
         console.log( 'selectedGroup: ', this.selectedGroup.id )
         this.$modal.show( `${this.project.id}__delete-group-modal` );
       },
-      deleteTodo( groupId, todoId, projectId ) {
-        const project = this.$firestore.projects.doc( projectId );
+      openDeleteTodoModal(groupId, todoId) {
+        this.$modal.show(`${this.project.id}__delete-todo-modal`);
+        this.selectedTodo.id = todoId;
+        this.selectedGroup.id = groupId;
+      },
+      deleteTodo(confirm) {
+        this.$modal.hide(`${this.project.id}__delete-todo-modal`);
+        if (confirm === false) return;
+
+        const project = this.$firestore.projects.doc(this.project.id);
+        console.log('delete todo.... ', confirm, project)
 
         project.get()
           .then( ( doc ) => {
-            const projectData = doc.data();
-            const todos       = _.clone( projectData.groups[ groupId ].todos );
-            delete todos[ todoId ];
+            const groupTodos = _.filter( doc.data().groups[ this.selectedGroup.id ].todos, todo => {
+              console.log('todo: ', todo, 'selected: ', this.selectedTodo.id);
+              return todo !== this.selectedTodo.id
+            });
+
+            const todos = _.clone(doc.data().todos);
+            delete todos[this.selectedTodo.id];
+
+            console.log(doc.data().groups[ this.selectedGroup.id ].todos, todos, this.selectedTodo.id);
+
             project.update( {
-              ...projectData,
+              ...doc.data(),
               groups: {
-                ...projectData.groups,
-                [groupId]: {
-                  ...projectData.groups[ groupId ],
-                  todos: todos,
+                ...doc.data().groups,
+                [this.selectedGroup.id]: {
+                  ...doc.data().groups[ this.selectedGroup.id ],
+                  todos: groupTodos,
                 }
-              }
-            } )
-          } )
+              },
+              todos,
+            })
+          })
       },
       deleteGroup(confirm) {
         this.$modal.hide( `${this.project.id}__delete-group-modal` );
@@ -294,9 +314,8 @@
       newTodo( params ) {
         console.log( 'new todo: ', params );
       },
-      sortedList( list, onParam ) {
-        console.log( 'sort: ', _.sortBy( list, ( item ) => item[ onParam ] ) );
-        return _.sortBy( list, item => item.name );
+      sortedList( list, sortBy ) {
+        return _.sortBy( list, item => item[sortBy] );
       }
     }
   }

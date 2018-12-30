@@ -122,23 +122,15 @@
         return group === '_no-group' ? 'group' : group;
       },
       deleteListItem( index ) {
-        this.$firestore.project.get()
-          .then( (doc) => {
-            const groups = doc.data().groups;
-            const todo  = doc.data().groups[this.groupId].todos[ this.id ];
+        this.$firestore.project.get().then((doc) => {
+            const todo  = doc.data().todos[ this.id ];
             const items = this.removeItem( todo.items, index );
 
             this.$firestore.project.set( {
-              groups: {
-                ...groups,
-                [this.groupId]: {
-                  ...groups[this.groupId],
-                  todos: {
-                    [this.id]: {
-                      ...todo,
-                      items
-                    }
-                  }
+              todos: {
+                [this.id]: {
+                  ...todo,
+                  items
                 }
               }
             }, { merge: true } )
@@ -271,6 +263,9 @@
   .x-button:hover {
     background: #f4f2f2;
     color: black
+  }
+  .x-button:focus {
+    outline: none;
   }
 
   .edit-modal {

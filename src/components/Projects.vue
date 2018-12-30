@@ -10,7 +10,7 @@
     </div>
 
     <div class="todos-list--wrapper">
-      <div v-for="project in projects" class="project-list project-card">
+      <div v-for="project in sortedList(projects, 'name')" class="project-list project-card">
 
         <div style="margin-left: 20px; color: #2a4865">
           <h2>{{ project.name }} <!--<span>({{ getPercent(project) }}%)</span>--></h2>
@@ -131,6 +131,9 @@
       },
       checked(list) {
         return list.filter(item => item.checked);
+      },
+      sortedList(list, sortBy) {
+        return _.sortBy( list, item => item[sortBy] );
       },
       beforeOpen(event) {
         const params = event.params;
