@@ -3,7 +3,7 @@
   <div v-if="project">
     <div
       v-if="project.groups && (Object.keys(project.groups).length > 1 || Object.keys(project.todos).length > 0)"
-      v-for="group in project.groups"
+      v-for="group in sortedList(project.groups, 'abc', 'name')"
       class="group-wrapper"
     >
       <div class="group-header" v-if="group.name !== '_no-group'">
@@ -254,6 +254,10 @@ export default {
     },
     newTodo(params) {
       console.log('new todo: ', params);
+    },
+    sortedList(list, method, onParam) {
+      console.log('sort: ', _.sortBy(list, (item) => item.name));
+      return _.sortBy(list, item => item.name);
     }
   }
 }
