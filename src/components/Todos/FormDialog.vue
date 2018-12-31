@@ -1,13 +1,17 @@
 <template>
-  <div class="custom-modal edit-modal">
+  <div class="edit-modal custom-modal">
     <h3>{{ title }}</h3>
     <template v-if="formInputs" v-for="input in formInputs">
       {{ input.label }}
+
+      <!-- TEXT INPUT -->
       <input
         v-if="input.type === 'text-input'"
         v-bind:class="input.class"
         v-model="formOutput.params[input.name]"
         maxlength="60">
+
+      <!-- COLOR -->
       <div
         v-if="input.type === 'color'"
         style="display: flex; flex-direction: row; flex-wrap: wrap; width: 240px; margin-bottom: 30px">
@@ -18,6 +22,27 @@
           v-bind:class="[ formOutput.params[input.name] === color ? 'color-swatch--selected' : '', 'color-swatch' ]" >
         </span>
       </div>
+
+      <!-- DROPDOWN -->
+      <v-menu offset-y v-if="input.type === 'dropdown'">
+        <v-btn
+          style="outline: none; margin-bottom: 20px"
+          slot="activator"
+          color="primary"
+          dark
+        >
+          {{ input.name }}
+        </v-btn>
+        <v-list style="left: 0">
+          <v-list-tile
+            v-for="(item, index) in input.options"
+            :key="index"
+            @click=""
+          >
+            <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+          </v-list-tile>
+        </v-list>
+      </v-menu>
     </template>
     <button class="action-button" @click="$emit(formOutput.name, formOutput.params)">Update</button>
   </div>

@@ -78,6 +78,7 @@
   import Todos from './Todos/Todos'
   import FormDialog from './Todos/FormDialog'
   import ConfirmationDialog from './Todos/ConfirmationDialog'
+  import dropdown from 'vue-dropdowns';
 
   export default {
     name: 'Projects',
@@ -90,6 +91,8 @@
         currentProjectId: '',
         currentProjectName: '',
         projectPercent: '0',
+        options: [{ name: 'a' }, { name: 'b' }, { name: 'c' }],
+        option: { name: 'a' },
       }
     },
     components: {
@@ -101,6 +104,7 @@
       NewGroup,
       FormDialog,
       ConfirmationDialog,
+      'dropdown': dropdown,
     },
     firestore() {
       return {
@@ -110,6 +114,9 @@
       };
     },
     methods: {
+      methodToRunOnSelect(payload) {
+        console.log("select")
+      },
       getPercent(project) {
         let percent = 0;
         const todosLength = Object.keys(project.todos).length;

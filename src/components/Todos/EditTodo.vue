@@ -2,14 +2,16 @@
   <div class="edit-modal" v-if="project.todos && project.todos[id]">
    <div class="edit-modal__header">
       {{ project.todos[id].name }}
-       <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="project.groups[project.todos[id].group].name">
+<!--     <button @click.prevent.stop="openDropdown($event, { test: 'test'})">test</button>-->
+<!--       <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="project.groups[project.todos[id].group].name">
          <b-dropdown-item
            @click="toggleGroup(group.id)"
            v-for="group in project.groups"
          >
            {{ group.name === '_no-group' ? 'none' : group.name }}
          </b-dropdown-item>
-       </b-dropdown>
+       </b-dropdown>-->
+     <button style="margin-left: auto" @click="openEditTodoModal(project.todos[id].name)">edit</button>
     </div>
 
     <div style="overflow: auto">
@@ -38,6 +40,23 @@
       v-model="todoName"
       placeholder="new item"
       v-on:keyup.enter="submitItem"/>
+
+    <modal name="edit-todo-list-modal" :width="400" :height="'auto'" :adaptive="true">
+      <form-dialog
+        title="Edit Todo"
+        :inputs="[
+          { type: 'text-input', class: 'text-input', label: 'Name', name: 'name' },
+          { type: 'dropdown', class: '', label: 'Group', name: 'groupId', options: groupOptions }
+          ]"
+        :output="{
+          name: 'edit-todo',
+          params: {
+            name: todoName,
+            groupId: groupId,
+          }
+        }"
+        @edit-todo="editTodo"/>
+    </modal>
   </div>
 </template>
 
@@ -46,6 +65,8 @@
   import firebase from 'firebase'
   import * as _ from 'lodash'
   import { db } from '../../main'
+  import FormDialog from './FormDialog'
+  import dropdown from 'vue-dropdowns';
 
   export default {
     props:   [
@@ -54,11 +75,21 @@
       'projectId',
       'groupId',
     ],
+    components: {
+      FormDialog,
+      dropdown,
+    },
     data() {
       return {
         checkedTodos: [],
         todoName: '',
         content: document.getElementById('edit-modal-content'),
+        groupOptions: [
+          { title: 'Click Me' },
+          { title: 'Click Me' },
+          { title: 'Click Me' },
+          { title: 'Click Me 2' }
+        ]
       }
     },
     firestore() {
@@ -66,10 +97,37 @@
         project:  db.collection('Projects').doc( this.projectId ),
       };
     },
-    created() {
-      console.log("edit... ", this.id)
-    },
     methods: {
+      methodToRunOnSelect(payload) {
+        console.log("select")
+      },
+      openEditTodoModal(name) {
+        this.todoName = name;
+        this.$modal.show('edit-todo-list-modal', { name });
+      },
+      optionClicked (event) {
+        window.alert(JSON.stringify(event))
+      },
+      editTodo(params) {
+        this.$modal.hide('edit-todo-list-modal');
+        console.log("edit todo: ", params);
+        const project = this.$firestore.project;
+        console.log({project})
+        project.get().then((doc) => {
+          console.log({doc})
+          const todos = doc.data().todos;
+          project.update({
+            todos: {
+              ...todos,
+              [this.id]: {
+                ...todos[this.id],
+                name: params.name,
+              }
+            }
+          });
+        })
+
+      },
       removeItem(list, index) {
         return list.filter((x,i) => {
           return i !== index;
@@ -89,8 +147,6 @@
           const currentTodos = doc.data().groups[currentGroupId]
             .todos
             .filter(todo => todo !== todoId);
-
-          console.log('filtered: ', todoId, currentTodos);
 
           project.set({
             ...projectData,
@@ -192,7 +248,6 @@
 </script>
 
 <style scoped>
-
   .edit-modal .text-input {
     padding: 0 10px;
     border: solid 1px lightgrey;

@@ -1,60 +1,61 @@
 <template>
-  <div id="app">
+  <v-app id="app">
     <status-bar></status-bar>
     <div style="display: flex; flex: 1">
       <nav-drawer></nav-drawer>
       <div style="overflow: hidden; width: 100%">
-        <router-view/>
+        <router-view />
       </div>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <script>
   import Vue from 'vue';
   import VueColor from 'vue-color'
+  import dropdown from 'vue-dropdowns';
 
   const today = new Date();
 
   export default {
-  name: 'App',
-  data: function() {
-    return {
-      showModal: false,
-      today: today,
-      color: '',
-    }
-  },
-}
+    name:       'App',
+    data:       function() {
+      return {
+        showModal: false,
+        today:     today,
+        color:     '',
+      }
+    },
+  }
 
-Vue.component('status-bar', {
-  template:
-  `
+  Vue.component( 'status-bar', {
+    template:
+      `
   <div class="status-bar">
     <breadcrumb></breadcrumb>
     <button class="menu-button">Logout</button>
   </div>
   `,
-  data() {
-    return {
-      crumbs: ['Home', 'Dashboard']
+    data() {
+      return {
+        crumbs: [ 'Home', 'Dashboard' ]
+      }
     }
-  }
-});
+  } );
 
-Vue.component('breadcrumb', {
-  template:
-  `
+  Vue.component( 'breadcrumb', {
+    template:
+           `
   <div class="status-text">{{ status }}</div>
   `,
-  props: [
-    'status'
-  ]
-});
+    props: [
+      'status'
+    ]
+  } );
 
-Vue.component('nav-drawer', {
-  template:
-  `
+  Vue.component( 'nav-drawer', {
+    template:
+      `
   <div class="nav-drawer">
     <div class="nav-list">
       <a
@@ -67,16 +68,25 @@ Vue.component('nav-drawer', {
     <button class="nav-drawer-button"></button>
   </div>
   `,
-  data() {
-    return {
-      routes: [
-        { title: 'Dashboard', link: './#/dashboard' },
-        { title: 'Habits', link: './#/habits' },
-        { title: 'Projects', link: './#/projects' },
-      ]
+    data() {
+      return {
+        routes: [
+          {
+            title: 'Dashboard',
+            link:  './#/dashboard'
+          },
+          {
+            title: 'Habits',
+            link:  './#/habits'
+          },
+          {
+            title: 'Projects',
+            link:  './#/projects'
+          },
+        ]
+      }
     }
-  }
-});
+  } );
 
 </script>
 
@@ -180,9 +190,11 @@ Vue.component('nav-drawer', {
   h1 {
     font-size: 3em;
   }
+
   h2 {
     font-size: 2em;
   }
+
   h3 {
     font-size: 1.6em;
     margin-top: 10px;
@@ -246,7 +258,6 @@ Vue.component('nav-drawer', {
     right: 0;
   }
 
-
   .floating-action-button {
     position: absolute;
     right: 50px;
@@ -282,6 +293,7 @@ Vue.component('nav-drawer', {
   }
 
   .container {
+    padding: 0;
     position: relative;
     padding-left: 32px;
     margin: 12px;
@@ -295,6 +307,7 @@ Vue.component('nav-drawer', {
     user-select: none;
     flex: 1;
   }
+
   /* Hide the browser's default radio button */
 
   .container input {
@@ -302,6 +315,7 @@ Vue.component('nav-drawer', {
     opacity: 0;
     cursor: pointer;
   }
+
   /* Create a custom radio button */
 
   .checkmark {
@@ -313,16 +327,19 @@ Vue.component('nav-drawer', {
     background-color: #eee;
     border-radius: 50%;
   }
+
   /* On mouse-over, add a grey background color */
 
-  .container:hover input~.checkmark {
+  .container:hover input ~ .checkmark {
     background-color: #ccc;
   }
+
   /* When the radio button is checked, add a blue background */
 
-  .container input:checked~.checkmark {
+  .container input:checked ~ .checkmark {
     background-color: #2196F3;
   }
+
   /* Create the indicator (the dot/circle - hidden when not checked) */
 
   .checkmark:after {
@@ -330,11 +347,13 @@ Vue.component('nav-drawer', {
     position: absolute;
     display: none;
   }
+
   /* Show the indicator (dot/circle) when checked */
 
-  .container input:checked~.checkmark:after {
+  .container input:checked ~ .checkmark:after {
     display: block;
   }
+
   /* Style the indicator (dot/circle) */
 
   .container .checkmark:after {

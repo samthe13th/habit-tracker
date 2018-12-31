@@ -28,6 +28,7 @@
 <script>
   import Vue from 'vue'
   import { db } from '../../main'
+
   const date = new Date();
 
   export default {

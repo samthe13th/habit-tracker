@@ -7,15 +7,19 @@ import VModal from 'vue-js-modal'
 import VueFirestore from 'vue-firestore'
 import Firebase from 'firebase'
 import BootstrapVue from 'bootstrap-vue'
+import Vuetify from 'vuetify'
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 require('firebase/firestore');
 
+require('../node_modules/vuetify/dist/vuetify.min.css');
+
 Vue.use(VModal);
 Vue.use(VueFirestore);
 Vue.use(BootstrapVue);
+Vue.use(Vuetify);
 
 Vue.config.productionTip = false;
 

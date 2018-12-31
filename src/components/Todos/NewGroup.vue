@@ -78,7 +78,8 @@
   .custom-modal .text-input {
     padding: 0 10px;
     border: solid 1px lightgrey;
-    margin: 20px;
+    margin: 10px;
+    margin-bottom: 30px;
     width: calc(100% - 60px);
     border-radius: 5px;
   }
