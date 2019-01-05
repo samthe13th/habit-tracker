@@ -2,14 +2,6 @@
   <div class="custom-modal new-todo">
 
     <h3>New Todo</h3>
-    <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="dropdownName(selectedGroup.name)">
-      <b-dropdown-item
-        v-for="group in project.groups"
-        @click="toggleGroup(group.id, group.name)"
-      >
-        {{ group.name === '_no-group' ? 'none' : group.name }}
-      </b-dropdown-item>
-    </b-dropdown>
 
     <input placeholder="Title" ref="titleInput" class="text-input " v-model="title" maxlength="60">
 
@@ -54,7 +46,7 @@
       return {
         selectedGroup: {
           id: '',
-          name: '_no-group',
+          name: '!!default',
         },
         todoType: 'project',
         date: new Date(),
@@ -64,7 +56,7 @@
     },
     methods: {
       dropdownName(group) {
-        return group === '_no-group' ? 'group' : group;
+        return group === '!!default' ? 'group' : group;
       },
       formattedDate() {
         return this.date.toLocaleDateString("en-US", this.dateOptions)

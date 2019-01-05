@@ -13,7 +13,6 @@
 <script>
   import Vue from 'vue';
   import VueColor from 'vue-color'
-  import dropdown from 'vue-dropdowns';
 
   const today = new Date();
 
@@ -96,6 +95,7 @@
     color: #314863;
     padding: 5px 10px;
     border-radius: 5px;
+    height: 36px;
   }
 
   .menu-button:hover,

@@ -1,5 +1,6 @@
 <template>
   <div class="edit-modal custom-modal">
+
     <h3>{{ title }}</h3>
     <template v-if="formInputs" v-for="input in formInputs">
       {{ input.label }}
@@ -31,20 +32,22 @@
           color="primary"
           dark
         >
-          {{ input.name }}
+          {{ output.params.selectedItem.title }}
         </v-btn>
         <v-list style="left: 0">
           <v-list-tile
             v-for="(item, index) in input.options"
             :key="index"
-            @click=""
+            @click="selectDropdownItem(item)"
           >
             <v-list-tile-title>{{ item.title }}</v-list-tile-title>
           </v-list-tile>
         </v-list>
       </v-menu>
     </template>
+
     <button class="action-button" @click="$emit(formOutput.name, formOutput.params)">Update</button>
+
   </div>
 </template>
 
@@ -65,6 +68,7 @@
       return {
         formInputs: this.inputs,
         formOutput: this.output,
+        dropdownItem: { title: 'none' },
         colors: [
           '#ffca6e',
           '#f8f086',
@@ -86,6 +90,9 @@
         if (color !== this.formOutput.params[input]) {
           this.formOutput.params[input] = color;
         }
+      },
+      selectDropdownItem(item) {
+        this.output.params.selectedItem = item;
       }
     }
   }

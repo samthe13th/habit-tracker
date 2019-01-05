@@ -2,17 +2,7 @@
   <div class="edit-modal" v-if="project.todos && project.todos[id]">
    <div class="edit-modal__header">
       {{ project.todos[id].name }}
-<!--     <button @click.prevent.stop="openDropdown($event, { test: 'test'})">test</button>-->
-<!--       <b-dropdown class="group-dropdown" toggle-class="menu-dropdown" id="ddown1" :text="project.groups[project.todos[id].group].name">
-         <b-dropdown-item
-           @click="toggleGroup(group.id)"
-           v-for="group in project.groups"
-         >
-           {{ group.name === '_no-group' ? 'none' : group.name }}
-         </b-dropdown-item>
-       </b-dropdown>-->
-     <button style="margin-left: auto" @click="openEditTodoModal(project.todos[id].name)">edit</button>
-    </div>
+   </div>
 
     <div style="overflow: auto">
       <div
@@ -22,12 +12,14 @@
 
         <label class="container">
           {{ item.name }}
+
           <input
             v-on:click="toggleTodoItem(index, item.name, $event)"
             :value="item.name"
             v-model="item.checked"
             type="checkbox">
           <span class="checkmark todo_checkmark"></span>
+
         </label>
 
         <button class="x-button" @click="deleteListItem(index)">&#10761</button>
@@ -110,11 +102,9 @@
       },
       editTodo(params) {
         this.$modal.hide('edit-todo-list-modal');
-        console.log("edit todo: ", params);
         const project = this.$firestore.project;
-        console.log({project})
+
         project.get().then((doc) => {
-          console.log({doc})
           const todos = doc.data().todos;
           project.update({
             todos: {
@@ -126,7 +116,6 @@
             }
           });
         })
-
       },
       removeItem(list, index) {
         return list.filter((x,i) => {
@@ -136,46 +125,8 @@
       toggleGroup(id) {
         this.changeGroup(id, this.id);
       },
-      changeGroup(newGroupId, todoId) {
-        console.log('new group: ', newGroupId)
-        console.log(this.$firestore.project);
-        const project = this.$firestore.project;
-
-        project.get().then((doc) => {
-          const projectData = doc.data();
-          const currentGroupId = _.clone(doc.data().todos[todoId].group);
-          const currentTodos = doc.data().groups[currentGroupId]
-            .todos
-            .filter(todo => todo !== todoId);
-
-          project.set({
-            ...projectData,
-            todos: {
-              ...projectData.todos,
-              [todoId]: {
-                ...projectData.todos[todoId],
-                group: newGroupId,
-              },
-            },
-            groups: {
-              ...projectData.groups,
-              [currentGroupId]: {
-                ...projectData.groups[currentGroupId],
-                todos: currentTodos,
-              },
-              [newGroupId]: {
-                ...projectData.groups[newGroupId],
-                todos: [
-                  ...projectData.groups[newGroupId].todos,
-                  todoId
-                ]
-              }
-            }
-          }, { merge: true })
-        })
-      },
       dropdownName(group) {
-        return group === '_no-group' ? 'group' : group;
+        return group === '!!default' ? 'group' : group;
       },
       deleteListItem( index ) {
         this.$firestore.project.get().then((doc) => {

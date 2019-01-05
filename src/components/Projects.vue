@@ -13,7 +13,7 @@
       <div v-for="project in sortedList(projects, 'name')" class="project-list project-card">
 
         <div style="margin-left: 20px; color: #2a4865">
-          <h2>{{ project.name }} <!--<span>({{ getPercent(project) }}%)</span>--></h2>
+          <h2 class="project-title">{{ project.name }} <!--<span>({{ getPercent(project) }}%)</span>--></h2>
 
           <span class="project-buttons-group">
             <button class="menu-button" v-on:click="openNewTodoModal(project.id)">New Todo</button>
@@ -31,10 +31,16 @@
       <new-project @new-project="newProject"/>
     </modal>
 
-    <modal name="edit-project-modal" :width="400" :height="'auto'" :adaptive="true" @before-open="beforeOpen">
+    <modal
+      name="edit-project-modal"
+      :width="400"
+      :height="'auto'"
+      :adaptive="true"
+      @before-open="beforeOpen">
+
       <form-dialog
         title="Edit Project"
-        :inputs="[{ type: 'text-input', class: 'text-input',label: 'Name', name: 'projectName' }]"
+        :inputs="[{ type: 'text-input', class: 'text-input', label: 'Name', name: 'projectName' }]"
         :output="{
           name: 'edit-project',
           params: {
@@ -43,6 +49,7 @@
           }
         }"
         @edit-project="editProject"/>
+
     </modal>
 
     <modal name="new-todo-modal" :adaptive="true" :width="400" @before-open="beforeOpen">
@@ -91,7 +98,7 @@
         currentProjectId: '',
         currentProjectName: '',
         projectPercent: '0',
-        options: [{ name: 'a' }, { name: 'b' }, { name: 'c' }],
+        groupOptions: [{ title: 'a' }, { title: 'b' }, { title: 'c' }],
         option: { name: 'a' },
       }
     },
@@ -104,7 +111,7 @@
       NewGroup,
       FormDialog,
       ConfirmationDialog,
-      'dropdown': dropdown,
+      dropdown,
     },
     firestore() {
       return {
@@ -170,7 +177,6 @@
         this.$firestore.projects.doc(this.currentProjectId).delete();
       },
       openEditProjectModal(projectId, projectName) {
-        console.log('open edit...', projectId)
         this.$modal.show('edit-project-modal', { projectId, projectName });
       },
       newProject(title) {
@@ -187,7 +193,7 @@
               groups: {
                 [defaultGroup]: {
                   id: defaultGroup,
-                  name: '_no-group',
+                  name: '!!default',
                   color: '#ffffff',
                   todos: [],
                 }
@@ -266,6 +272,10 @@
 </script>
 
 <style scoped>
+
+  .project-title {
+    margin-top: 10px;
+  }
 
   .project-buttons-group {
     margin-top: 10px;

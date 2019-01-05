@@ -7,46 +7,67 @@
       v-for="group in sortedList(project.groups, 'name')"
       class="group-wrapper"
     >
-      <div class="group-header" v-if="group.name !== '_no-group'">
+      <div class="group-header" v-if="group.name !== '!!default'">
         <div class="group-header__swatch" v-bind:style="{ 'background': group.color }"></div>
         <div>{{ group.name }}</div>
+
         <button
-          v-on:click="openGroupEditModal(group.id, group.name, group.color)"
+          @click="openGroupEditModal(group.id, group.name, group.color)"
           style="font-size: 16px; margin-left: 10px"
           class="todo-card__button menu-button">
           Edit
         </button>
+
         <button
-          v-on:click="openGroupDeleteModal(group.id)"
+          @click="openGroupDeleteModal(group.id)"
           style="font-size: 16px; margin-left: 10px"
           class="todo-card__button menu-button">
           Delete
         </button>
+
       </div>
 
       <div class="todos-list">
+
         <template
           v-if="group.todos.length > 0 && project.todos"
           v-for="(id, index) in group.todos">
+
           <em style="margin-left: 20px; font-size: 16px"
             v-if="group.todos.length === 0 && group.id !== project.defaultGroup">
             No todos in this group yet!
           </em>
-          <todo-card
-            v-if="project.todos[id]"
-            :project="project.todos[id].project"
-            :id="index"
-            :name="project.todos[id].name"
-            :items="items(project.todos[id].items)"
-            :checked="checked(project.todos[id].items)"
-            :color="project.groups[project.todos[id].group].color"
-            @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
-            @delete-todo="openDeleteTodoModal(project.todos[id].group, id)"
-          ></todo-card>
+
+          <div style="display: flex; align-items: center">
+            <todo-card
+              v-if="project.todos[id]"
+              :project="project.todos[id].project"
+              :id="index"
+              :name="project.todos[id].name"
+              :items="items(project.todos[id].items)"
+              :checked="checked(project.todos[id].items)"
+              :color="project.groups[project.todos[id].group].color"
+              @edit-todo="openEditModal(project.todos[id].group, id, project.todos[id].created)"
+              @delete-todo="openDeleteTodoModal(project.todos[id].group, id)"
+            ></todo-card>
+
+            <button
+              @click="openEditTodoListModal(project.todos[id].name, id)"
+              style="font-size: 16px; margin-left: 10px; margin-bottom: 10px"
+              class="todo-card__button menu-button">
+              Edit
+            </button>
+
+            <button
+              @click="openDeleteTodoModal(project.todos[id].group, id)"
+              style="font-size: 16px; margin-left: 10px; margin-bottom: 10px"
+              class="todo-card__button menu-button">
+              Delete
+            </button>
+
+          </div>
         </template>
-
       </div>
-
     </div>
 
     <modal :name="`${project.id}__edit-todo`" :adaptive="true" :height="'90%'" :draggable="true">
@@ -93,27 +114,49 @@
             todoName: '',
           }
         }"
-        @new-todo="newTodo" />
+        @new-todo="newTodo"/>
     </modal>
 
-    <modal :name="`${ project.id }__delete-group-modal`" :width="400" :height="'auto'">
+    <modal :name="`${project.id}__delete-group-modal`" :width="400" :height="'auto'">
       <confirmation-dialog
         message="Are you sure you want to delete this group? The todos inside will not be deleted."
         output="delete-group"
         @delete-group="deleteGroup"
-      >
-      </confirmation-dialog>
+      ></confirmation-dialog>
     </modal>
 
-    <modal :name="`${ project.id }__delete-todo-modal`" :width="400" :height="'auto'">
+    <modal :name="`${project.id}__delete-todo-modal`" :width="400" :height="'auto'">
       <confirmation-dialog
         message="Are you sure you want to delete this todo?"
         output="delete-todo"
         @delete-todo="deleteTodo"
-      >
-      </confirmation-dialog>
+      ></confirmation-dialog>
     </modal>
 
+    <modal
+      :name="`${project.id}__edit-todo-list-modal`"
+      :width="400"
+      :height="'auto'"
+      :adaptive="true">
+
+     <form-dialog
+        title="Edit Todo"
+        :inputs="[
+          { type: 'text-input', class: 'text-input', label: 'Name', name: 'todoName' },
+          { type: 'dropdown', class: '', label: 'Group', name: 'groupId', options: getGroupOptions(project.groups) }
+         ]"
+        :output="{
+          name: 'edit-todo',
+          params: {
+            todoId: selectedTodo.id,
+            groupId: selectedGroup.id,
+            selectedItem: selectedGroup.name,
+            todoName: selectedTodo.name,
+          }
+        }"
+        @edit-todo="editTodo"/>
+
+    </modal>
   </div>
 </template>
 
@@ -129,7 +172,7 @@
   import ConfirmationDialog from './ConfirmationDialog'
 
   export default {
-    name:       'Todos',
+    name: 'Todos',
     props:      [
       "project"
     ],
@@ -143,7 +186,12 @@
         selectedGroup:       {
           id:   '',
           name: ''
-        }
+        },
+        groupOptions: [
+          { title: 'a' },
+          { title: 'b' },
+          { title: 'c' }
+          ],
       }
     },
     components: {
@@ -160,6 +208,9 @@
       };
     },
     methods:    {
+      getGroupOptions(groups) {
+        return _.map(groups, group => ({ title: group.name, value: group.id }));
+      },
       items( items ) {
         return items ? items.length : 0;
       },
@@ -183,6 +234,15 @@
       openNewTodoModal( groupId ) {
         this.$modal.show( `${this.project.id}__new-todo-modal` );
       },
+      newTodo() {
+        console.log('test')
+      },
+      openEditTodoListModal(name, id) {
+        this.selectedTodo.id = id;
+        this.selectedTodo.name = name;
+        this.todoName = name;
+        this.$modal.show(`${this.project.id}__edit-todo-list-modal`, { name });
+      },
       openGroupEditModal( groupId, groupName, groupColor ) {
         this.selectedGroup =
           {
@@ -204,24 +264,58 @@
         this.selectedTodo.id = todoId;
         this.selectedGroup.id = groupId;
       },
+      changeGroup(newGroupId, todoId) {
+        console.log('new group: ', newGroupId)
+        console.log(this.$firestore.project);
+        const project = this.$firestore.project;
+
+        project.get().then((doc) => {
+          const projectData = doc.data();
+          const currentGroupId = _.clone(doc.data().todos[todoId].group);
+          const currentTodos = doc.data().groups[currentGroupId]
+            .todos
+            .filter(todo => todo !== todoId);
+
+          project.set({
+            ...projectData,
+            todos: {
+              ...projectData.todos,
+              [todoId]: {
+                ...projectData.todos[todoId],
+                group: newGroupId,
+              },
+            },
+            groups: {
+              ...projectData.groups,
+              [currentGroupId]: {
+                ...projectData.groups[currentGroupId],
+                todos: currentTodos,
+              },
+              [newGroupId]: {
+                ...projectData.groups[newGroupId],
+                todos: [
+                  ...projectData.groups[newGroupId].todos,
+                  todoId
+                ]
+              }
+            }
+          }, { merge: true })
+        })
+      },
       deleteTodo(confirm) {
         this.$modal.hide(`${this.project.id}__delete-todo-modal`);
         if (confirm === false) return;
 
         const project = this.$firestore.projects.doc(this.project.id);
-        console.log('delete todo.... ', confirm, project)
 
         project.get()
           .then( ( doc ) => {
             const groupTodos = _.filter( doc.data().groups[ this.selectedGroup.id ].todos, todo => {
-              console.log('todo: ', todo, 'selected: ', this.selectedTodo.id);
               return todo !== this.selectedTodo.id
             });
 
             const todos = _.clone(doc.data().todos);
             delete todos[this.selectedTodo.id];
-
-            console.log(doc.data().groups[ this.selectedGroup.id ].todos, todos, this.selectedTodo.id);
 
             project.update( {
               ...doc.data(),
@@ -259,18 +353,17 @@
               groups,
               todos,
             })
-          } );
-
+          });
       },
       editGroup( params ) {
         console.log( { params } )
         const project = this.$firestore.projects.doc( params.projectId );
-        this.$modal.hide( `${this.project.id}__edit-group-modal` );
+        this.$modal.hide(`${this.project.id}__edit-group-modal`);
 
         project.get()
-          .then( ( doc ) => {
+          .then( (doc) => {
             const group = doc.data().groups[ params.groupId ];
-            project.set( {
+            project.set({
               groups: {
                 ...project.groups,
                 [params.groupId]: {
@@ -279,11 +372,56 @@
                   color: params.groupColor,
                 }
               }
-            }, { merge: true } );
-          } );
+            }, {
+              merge: true
+            });
+          });
+      },
+      editTodo(params) {
+        this.$modal.hide(`${this.project.id}__edit-todo-list-modal`);
+        const project = this.$firestore.projects.doc(this.project.id);
+        const newGroupId = params.selectedItem.value;
+
+        project.get().then((doc) => {
+          const todos = doc.data().todos;
+          const currentGroupId = _.clone(doc.data().todos[this.selectedTodo.id].group);
+          const currentTodos = doc.data().groups[currentGroupId]
+            .todos
+            .filter(todo => todo !== this.selectedTodo.id);
+
+          console.log('current group id: ', currentGroupId, 'new group id: ', params.selectedItem.value);
+
+          project.update({
+            todos: {
+              ...todos,
+              [this.selectedTodo.id]: {
+                ...todos[this.selectedTodo.id],
+                name: params.todoName,
+                group: newGroupId
+              }
+            },
+            groups: {
+              ...doc.data().groups,
+              [currentGroupId]: {
+                ...doc.data().groups[currentGroupId],
+                todos: currentTodos,
+              },
+              [newGroupId]: {
+                ...doc.data().groups[newGroupId],
+                todos: [
+                  ...doc.data().groups[newGroupId].todos,
+                  this.selectedTodo.id
+                ]
+              }
+            }
+          });
+        })
       },
       openNewProjectModal() {
         this.$modal.show( 'new-project-modal' );
+      },
+      beforeOpen(event) {
+        console.log('BO: ', event.params)
       },
       newProject( title ) {
         this.$modal.hide( 'new-project-modal' );
@@ -311,9 +449,6 @@
           } );
         }
       },
-      newTodo( params ) {
-        console.log( 'new todo: ', params );
-      },
       sortedList( list, sortBy ) {
         return _.sortBy( list, item => item[sortBy] );
       }
@@ -335,7 +470,7 @@
   .group-header {
     font-size: 24px;
     display: flex;
-    margin: 10px 20px 0 20px;
+    margin: 10px 20px 10px 20px;
   }
 
   .group-header__swatch {
@@ -389,9 +524,10 @@
 
   .todos-list {
     display: flex;
+    flex-direction: column;
     flex-wrap: wrap;
     overflow: scroll;
-    margin-left: 10px;
+    padding: 0 20px;
   }
 
 </style>

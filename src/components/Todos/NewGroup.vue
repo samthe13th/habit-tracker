@@ -63,7 +63,6 @@
 </script>
 
 <style>
-
   .color-swatch--selected:after {
     color: white;
     content: "\2713";
@@ -100,3 +99,4 @@
     font-size: 18px;
   }
 </style>
+

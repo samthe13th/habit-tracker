@@ -1,12 +1,12 @@
 <template>
-  <div @mouseover="mouseOver" class="todo-card">
+  <div @click="$emit('edit-todo')" class="todo-card">
     <div class="todo-card__group-mark" v-bind:style="groupColor"></div>
     <div class="todo-card__title">{{ name }}</div>
-    <h5 class="todo-card__summary" style="margin-bottom: 30px">{{ checked.length }} / {{ items }}</h5>
-    <div @mouseout="mouseOut" class="todo-card__overlay">
+    <h5 class="todo-card__summary">{{ checked.length }} / {{ items }}</h5>
+<!--    <div @mouseout="mouseOut" class="todo-card__overlay">
       <button @click="$emit('edit-todo')" class="todo-card__button action-button">Open</button>
       <button @click="$emit('delete-todo')" class="todo-card__button action-button">Delete</button>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -32,8 +32,7 @@
     computed: {
       groupColor: function() {
         return {
-          borderLeft: `solid 20px ${this.color}`,
-          borderTop: `solid 20px ${this.color}`,
+          borderColor: this.color,
         }
       }
     },
@@ -51,9 +50,10 @@
 <style scoped>
 
   .todo-card__group-mark {
-    border-radius: 10px 0;
-    border-bottom: solid 20px transparent;
-    border-right: solid 20px transparent;
+    height: 100%;
+    width: 5px;
+    border-left-width: 6px;
+    border-left-style: solid;
     position: absolute;
     left: 0;
     top: 0;
@@ -91,29 +91,26 @@
   }
 
   .todo-card__summary {
-    font-size: 38px;
+    font-size: 26px;
+    margin: 0;
   }
 
   .todo-card {
-    align-items: center;
     position: relative;
     display: flex;
-    flex-direction: column;
-    width: 200px;
-    height: 200px;
     border-radius: 8px;
     background: white;
-    margin: 10px;
-    padding: 15px;
+    margin-bottom: 10px;
     cursor: pointer;
+    width: 100%;
+    align-items: center;
     overflow: hidden;
+    padding: 10px 20px;
   }
 
   .todo-card__title {
     flex: 1;
     padding: 0;
     font-size: 24px;
-    margin-top: 20px;
-    margin-bottom: 20px;
   }
 </style>
