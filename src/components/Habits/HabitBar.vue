@@ -1,6 +1,21 @@
 <template>
-  <div>
+  <div style="width: 310px; background: white; padding: 20px; margin: 10px; flex-shrink: 0; position: relative">
     <div class="habit-title">{{title}}</div>
+    <!-- buttons -->
+    <div class="habit-buttons">
+
+      <!-- privacy -->
+      <button class="privacy-btn" v-on:click="togglePrivacy(habit.id)">
+        e
+      </button>
+
+      <!-- delete -->
+      <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
+        x
+      </button>
+
+    </div>
+    <p style="text-align: left; font-size: 18px">Best streak: 0</p>
     <div class="habit-bar" :class="{ 'cell-private': habit && habit.private }">
       <div v-for="day in dateArray" class="cell">
         <data-point
@@ -67,30 +82,48 @@
 </script>
 
 <style scoped>
+
+  .habit-buttons {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .habit-buttons button {
+    font-size: 24px;
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    background: transparent;
+    color: lightgrey;
+  }
+
+  .habit-buttons button:hover {
+    color: #0099CC;
+  }
+
   .cell {
-    width: 80px;
+    width: 30px;
   }
 
   .cell-private {
-    background: #4531d0;
+    background: #0099CC;
   }
 
   .habit-bar {
     display: flex;
     flex-direction: row;
-    padding: 10px;
-    justify-content: space-evenly;
+    justify-content: space-between;
     position: relative;
     height: 45px;
-    overflow:hidden;
+    overflow: hidden;
+    flex-shrink: 0;
+    padding: 2px 8px;
   }
 
   .habit-title {
-    line-height: 50px;
-    font-size: 20px;
-    position: absolute;
-    padding-right: 10px;
-    left: -2px;
-    transform: translateX(-100%);
+    color: black;
+    text-align: left;
+    font-size: 22px;
   }
 </style>

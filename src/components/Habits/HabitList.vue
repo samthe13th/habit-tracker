@@ -2,12 +2,12 @@
 
   <div class="week">
 
-    <h1>Daily Habits</h1>
+    <h3 style="font-size: 28px; color: white; text-align: left; margin-left: 15px; margin-bottom: 5px; margin-top: 20px">Habits</h3>
 
-    <div class="habit-log-header">
+<!--    <div class="habit-log-header">
 
       <div
-        class="nav-btn nav-btn--left"
+        class="nav-btn nav-btn&#45;&#45;left"
         @click="$emit('change-week', startDate, 'left')">
       </div>
 
@@ -32,14 +32,13 @@
       </div>
 
       <div
-        class="nav-btn nav-btn--right"
+        class="nav-btn nav-btn&#45;&#45;right"
         @click="$emit('change-week', startDate, 'right')">
       </div>
 
-    </div>
-
+    </div>-->
+    <div style="position: relative; margin: 5px; display: flex; flex-wrap: wrap">
     <template v-for="habit in habits">
-      <div style="position: relative; margin: 5px">
 
         <!-- habit bar -->
         <habit-bar
@@ -49,23 +48,8 @@
           :id="habit.id">
         </habit-bar>
 
-        <!-- buttons -->
-        <div class="habit-buttons">
-
-          <!-- privacy -->
-          <button class="privacy-btn" v-on:click="togglePrivacy(habit.id)">
-            <img src="../../assets/lock-96.png" />
-          </button>
-
-          <!-- delete -->
-          <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
-            Delete
-          </button>
-
-        </div>
-
-      </div>
     </template>
+    </div>
 
     <modal name="delete-habit-modal" :width="400" :height="400">
       <remove-habit @delete-habit="deleteHabit" />

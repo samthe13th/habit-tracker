@@ -1,7 +1,7 @@
 <template>
   <v-app id="app">
     <status-bar></status-bar>
-    <div style="display: flex; flex: 1">
+    <div style="display: flex; flex: 1; background: #0099CC">
       <nav-drawer></nav-drawer>
       <div style="overflow: hidden; width: 100%">
         <router-view />
@@ -121,7 +121,7 @@
   }
 
   .nav-list {
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: flex-start;
     color: white;

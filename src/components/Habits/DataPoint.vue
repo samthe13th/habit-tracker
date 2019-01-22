@@ -6,8 +6,6 @@
       <button
         @click="logHabit()"
         v-bind:class="{
-          'point--sm': nextLog[nextDate.getDate()] || !log[date.getDate()],
-          'point--lg': !nextLog[nextDate.getDate()] && log[date.getDate()],
           'point--marked': log[date.getDate()],
         }"
         class="point">
@@ -128,43 +126,33 @@
 
 <style scoped>
   .point {
-    border-radius: 100%;
     background: lightgrey;
-    transition: all 80ms ease-in-out;
     line-height: 30px;
-    transform: translateX(-50%);
-    position: absolute;
     z-index: 100;
+    height: 30px;
+    width: 30px;
+    font-size: 16px;
   }
 
-  .point--sm {
-    height: 24px;
-    width: 24px;
-  }
-
-  .point--lg {
-    height: 36px;
-    width: 36px;
-    transform: translate(-50%, -6px);
-    font-size: 15px;
-    padding: 0;
-    line-height: 36px;
+  .point:hover {
+    height: 34px;
+    width: 34px;
+    transform: translate(-2px,-2px);
   }
 
   .point--marked {
-    background: #6bb6ff;
+    background: #0099CC;
   }
 
   .streak-bar {
     display: block;
     content: '';
-    width: 97px;
-    height: 24px;
-    left: -55px;
-    top: 0;
+    width: 20px;
+    height: 10px;
+    left: -10px;
+    top: 10px;
     position: absolute;
-    background-color: #6bb6ff;
-    opacity: 0.6;
+    background-color: #0099CC;
   }
 
   .streak-bar--end {
@@ -175,7 +163,7 @@
     right: -55px;
     top: 0;
     position: absolute;
-    background-color: #6bb6ff;
+    background-color: #0099CC;
     opacity: 0.6;
   }
 </style>
