@@ -17,14 +17,18 @@
     </div>
     <p style="text-align: left; font-size: 18px">Best streak: 0</p>
     <div class="habit-bar" :class="{ 'cell-private': habit && habit.private }">
-      <div v-for="day in dateArray" class="cell">
-        <data-point
-          :id="id"
-          :date="day"
-          :prevDate="prevDate(day)"
-          :nextDate="nextDate(day)">
-        </data-point>
-      </div>
+        <div v-for="day in dateArray" class="cell">
+          <data-point
+            :id="id"
+            :date="day"
+            :prevDate="prevDate(day)"
+            :nextDate="nextDate(day)">
+          </data-point>
+        </div>
+
+    </div>
+    <div style="flex: 1; display: flex; justify-content: space-between">
+      <div v-for="day in days" class="day">{{day}}</div>
     </div>
   </div>
 </template>
@@ -49,6 +53,7 @@
       return {
         isPublic: true,
         incomingStreak: 0,
+        days: ['m', 't', 'w', 'th', 'f', 's', 'su']
       }
     },
     created() {
@@ -104,6 +109,8 @@
 
   .cell {
     width: 30px;
+    display: flex;
+    flex-direction: column;
   }
 
   .cell-private {
@@ -115,15 +122,22 @@
     flex-direction: row;
     justify-content: space-between;
     position: relative;
-    height: 45px;
     overflow: hidden;
     flex-shrink: 0;
     padding: 2px 8px;
+    margin: 0 -8px;
+    height: 34px;
   }
 
   .habit-title {
     color: black;
     text-align: left;
     font-size: 22px;
+  }
+
+  .day {
+    z-index: 100;
+    width: 30px;
+    font-size: 16px;
   }
 </style>
