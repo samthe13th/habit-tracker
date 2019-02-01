@@ -3,18 +3,23 @@
   <div style="position: relative">
 
     <template v-if="log">
+
       <button
         @click="logHabit()"
         v-bind:class="{
           'point--marked': log[date.getDate()],
+          'point--clickable': isCurrentDate(),
         }"
         class="point">
+
         <template v-if="!nextLog[nextDate.getDate()] && log[date.getDate()]">
           {{ log[date.getDate()] }}
         </template>
+
       </button>
 
       <template v-if="log[date.getDate()]">
+
         <div
           v-if="prevLog && prevLog[prevDate.getDate()]"
           class="streak-bar">
@@ -24,7 +29,9 @@
           v-if="date.getDay() === 6 && nextLog[nextDate.getDate()]"
           class="streak-bar--end">
         </div>
+
       </template>
+
     </template>
   </div>
 
@@ -35,6 +42,8 @@
   import * as _ from 'lodash'
   import { db } from '../../main'
   import Vue from 'vue'
+
+  const date = new Date();
 
   export default {
     name: 'DataPoint',
@@ -49,6 +58,9 @@
         streak: 0,
       }
     },
+    created() {
+      console.log('id: ', this.id)
+    },
     firestore() {
       return {
         prevLog: db.doc(`DailyHabits/${this.id}/log/${this.prevDate.getFullYear()}_${this.prevDate.getMonth()}`),
@@ -57,6 +69,9 @@
       }
     },
     methods: {
+      isCurrentDate() {
+        return this.date.setHours(0,0,0,0) == date.setHours(0,0,0,0);
+      },
       logHabit() {
         const day = `${this.date.getDate()}`;
         const prevDate = _.clone(this.date);
@@ -126,6 +141,7 @@
 
 <style scoped>
   .point {
+    cursor: default;
     background: lightgrey;
     line-height: 30px;
     z-index: 100;
@@ -134,7 +150,11 @@
     font-size: 16px;
   }
 
-  .point:hover {
+  .point--clickable {
+    cursor: pointer;
+  }
+
+  .point--clickable:hover {
     height: 34px;
     width: 34px;
     transform: translate(-2px,-2px);

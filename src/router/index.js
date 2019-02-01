@@ -5,6 +5,7 @@ import Login from '@/components/Login'
 import SignUp from '@/components/SignUp'
 import Dashboard from '@/components/Dashboard'
 import Projects from '@/components/Projects'
+import Goals from '@/components/Goals/Main'
 
 Vue.use(Router);
 
@@ -28,9 +29,14 @@ export default new Router({
       component: Dashboard,
     },
     {
-      path: '/habits',
-      name: 'HabitTracker',
+      path: '/today',
+      name: 'Today',
       component: Habits,
+    },
+   {
+      path: '/goals',
+      name: 'Goals',
+      component: Goals,
     },
     {
       path: '/login',

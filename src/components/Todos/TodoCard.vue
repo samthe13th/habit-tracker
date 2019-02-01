@@ -1,12 +1,8 @@
 <template>
   <div @click="$emit('edit-todo')" class="todo-card">
-    <div class="todo-card__group-mark" v-bind:style="groupColor"></div>
+    <div v-bind:style="{ borderLeftWidth: width(checked.length/items), borderColor: color }" class="todo-card__group-mark"></div>
     <div class="todo-card__title">{{ name }}</div>
     <h5 class="todo-card__summary">{{ checked.length }} / {{ items }}</h5>
-<!--    <div @mouseout="mouseOut" class="todo-card__overlay">
-      <button @click="$emit('edit-todo')" class="todo-card__button action-button">Open</button>
-      <button @click="$emit('delete-todo')" class="todo-card__button action-button">Delete</button>
-    </div>-->
   </div>
 </template>
 
@@ -27,6 +23,7 @@
     data() {
       return {
         overCard: false,
+        barWidth: '100px'
       }
     },
     computed: {
@@ -43,6 +40,9 @@
       mouseOut() {
         this.overCard = false;
       },
+      width(n) {
+        return `${n * 500}px`;
+      }
     }
   }
 </script>
@@ -52,7 +52,6 @@
   .todo-card__group-mark {
     height: 100%;
     width: 5px;
-    border-left-width: 6px;
     border-left-style: solid;
     position: absolute;
     left: 0;
@@ -97,15 +96,20 @@
 
   .todo-card {
     position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     border-radius: 8px;
-    background: white;
+    background: #ffffff;
     margin-bottom: 10px;
     cursor: pointer;
-    width: 100%;
+    width: 500px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     overflow: hidden;
     padding: 10px 20px;
+    border: solid #009bd1 1px;
   }
 
   .todo-card__title {

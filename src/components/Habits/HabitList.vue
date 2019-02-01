@@ -2,53 +2,17 @@
 
   <div class="week">
 
-    <h3 style="font-size: 28px; color: white; text-align: left; margin-left: 15px; margin-bottom: 5px; margin-top: 20px">Habits</h3>
-
-<!--    <div class="habit-log-header">
-
-      <div
-        class="nav-btn nav-btn&#45;&#45;left"
-        @click="$emit('change-week', startDate, 'left')">
-      </div>
-
-      <div v-for="(day, i) in dateArray" class="cell">
-
-        <div style="height: 20px">
-          <div v-if="i === 0">{{ months[ startDate.getMonth() ] }}</div>
-          <div v-if="day.getDate() === date && day.getMonth() !== startDate.getMonth()">
-            {{ months[ day.getMonth() ] }}
-          </div>
-        </div>
-
-        <div style="position: relative">
-          <div
-            v-if="day.getDate() === date && day.getMonth() !== startDate.getMonth()"
-            class="current-day-overlay">
-          </div>
-          <h2>{{ days[i].substring(0,2) }}</h2>
-          <div>{{ day.getDate() }}</div>
-        </div>
-
-      </div>
-
-      <div
-        class="nav-btn nav-btn&#45;&#45;right"
-        @click="$emit('change-week', startDate, 'right')">
-      </div>
-
-    </div>-->
-    <div style="position: relative; margin: 5px; display: flex; flex-wrap: wrap">
-    <template v-for="habit in habits">
-
-        <!-- habit bar -->
-        <habit-bar
-          class="habit-bar-wrapper"
-          :dateArray="dateArray"
-          :title="habit.title"
-          :id="habit.id">
-        </habit-bar>
-
-    </template>
+    <div style="position: relative; margin: 5px; display: flex; flex-wrap: wrap; justify-content: center">
+      <habit-bar
+        @delete-habit="openDeleteDialog"
+        v-for="habit in habits"
+        class="habit-bar-wrapper"
+        :date="dateObj"
+        :dateArray="dateArray"
+        :title="habit.title"
+        :id="habit.id">
+      </habit-bar>
+      <div v-if="habits.length % 2 === 1"class="placeholder-card"></div>
     </div>
 
     <modal name="delete-habit-modal" :width="400" :height="400">
@@ -85,6 +49,7 @@
         sundayMonth,
         months,
         days,
+        dateObj: date,
         date: date.getDate(),
         dayNumber,
         day,
@@ -102,27 +67,19 @@
       }
     },
     methods: {
-      openDeleteDialog(title) {
-        this.habitToDelete = title;
+      openDeleteDialog(id) {
+        this.habitToDelete = id;
         this.$modal.show('delete-habit-modal');
       },
       deleteHabit(followThrough) {
         if (followThrough) {
-        this.$firestore.habits
-          .where("title", "==", this.habitToDelete)
-          .get()
-          .then((snap) => {
-            var batch = db.batch();
-
-            snap.forEach((doc) => {
-             this.deleteLog(doc.data().id);
-             batch.delete(doc.ref);
-            });
-
-            batch.commit();
-          })
+          this.$firestore.habits.doc( this.habitToDelete )
+            .get()
+            .then( ( doc ) => {
+              this.deleteLog( this.habitToDelete );
+            })
+          this.$modal.hide( 'delete-habit-modal' );
         }
-        this.$modal.hide('delete-habit-modal');
       },
       deleteLog(id) {
         const log = db.collection(`DailyHabits/${id}/log`);
@@ -133,6 +90,8 @@
             batch.delete(doc.ref);
           })
           batch.commit();
+        }).then(() => {
+          this.$firestore.habits.doc(id).delete();
         })
       },
       togglePrivacy(id) {
@@ -171,7 +130,7 @@
   }
 
   .week {
-    width: 700px;
+    max-width: 670px;
     margin: auto;
     display: flex;
     flex-direction: column;
@@ -188,6 +147,13 @@
     border: solid 1px #2196F3;
     border-radius: 6px;
     position: relative;
+  }
+
+  .placeholder-card {
+    flex-shrink: 0;
+    width: 310px;
+    height: 174px;
+    margin: 10px;
   }
 
   .current-day-overlay {

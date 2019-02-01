@@ -1,5 +1,6 @@
 <template>
-  <div style="width: 310px; background: white; padding: 20px; margin: 10px; flex-shrink: 0; position: relative">
+  <div style="width: 300px; background: white; padding: 20px; margin: 10px; flex-shrink: 0; position: relative">
+
     <div class="habit-title">{{title}}</div>
     <!-- buttons -->
     <div class="habit-buttons">
@@ -10,26 +11,30 @@
       </button>
 
       <!-- delete -->
-      <button class="delete-btn" v-on:click="openDeleteDialog(habit.title)">
+      <button class="delete-btn" @click="$emit('delete-habit', id)">
         x
       </button>
 
     </div>
+
     <p style="text-align: left; font-size: 18px">Best streak: 0</p>
+
     <div class="habit-bar" :class="{ 'cell-private': habit && habit.private }">
         <div v-for="day in dateArray" class="cell">
           <data-point
+            v-if="!isFutureDate(day)"
             :id="id"
             :date="day"
             :prevDate="prevDate(day)"
             :nextDate="nextDate(day)">
           </data-point>
         </div>
-
     </div>
+
     <div style="flex: 1; display: flex; justify-content: space-between">
       <div v-for="day in days" class="day">{{day}}</div>
     </div>
+
   </div>
 </template>
 
@@ -53,10 +58,11 @@
       return {
         isPublic: true,
         incomingStreak: 0,
-        days: ['m', 't', 'w', 'th', 'f', 's', 'su']
+        days: ['su', 'm', 't', 'w', 'th', 'f', 's']
       }
     },
     created() {
+      console.log('date array: ', this.dateArray)
       const month = `${this.dateArray[0].getFullYear()}_${this.dateArray[0].getMonth()}`;
       db.collection(`DailyHabits/${this.id}/log`)
         .doc(month)
@@ -66,8 +72,13 @@
       'title',
       'id',
       'dateArray',
+      'date',
     ],
     methods: {
+      isFutureDate(_date) {
+        console.log('is ', _date, ' > ', this.date, _date.getDate() > this.date.getDate())
+        return _date.setHours(0,0,0,0) > this.date.setHours(0,0,0,0);
+      },
       prevDate(_date) {
         const prevDate = _.clone(_date);
         prevDate.setDate(_date.getDate() - 1);

@@ -1,7 +1,9 @@
 <template>
-  <div class="hello">
-    <div class="nav">
-      <button class="tool-button" v-on:click="logout">Logout</button>
+  <div>
+
+    <div style="display: flex; max-width: 650px; margin: auto">
+      <div style="font-size: 28px; color: white; text-align: left; margin-left: 15px; margin-bottom: 5px; margin-top: 20px">Habits</div>
+      <button v-on:click="newHabit" class="add-button">+</button>
     </div>
 
     <habit-list
@@ -11,13 +13,10 @@
       :dateArray="dateArray"
       :dailyHabits="habits"/>
 
-    <button class="floating-action-button" v-on:click="newHabit">
-      +
-    </button>
-
     <modal name="add-habit-modal" :width="400" :height="400">
       <new-habit @create-habit="createHabit" />
     </modal>
+
   </div>
 </template>
 
@@ -94,12 +93,34 @@
       createHabit(newHabit) {
         this.$modal.hide('add-habit-modal');
         if (newHabit.period === 'daily') {
+          this.showWeek = false;
           const ref = db.collection('DailyHabits').doc();
           const id = ref.id;
-          ref.set({ ...newHabit, id, private: false })
+          ref.set({ ...newHabit, id, private: false }).then(() => {
+            this.showWeek = true;
+          })
         }
       },
     }
   }
 
 </script>
+
+<style scoped>
+  .add-button {
+    background: none;
+    font-size: 24px;
+    line-height: 30px;
+    border: solid 2px white;
+    height: 34px;
+    width: 34px;
+    border-radius: 100%;
+    margin-top: 20px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+  }
+
+  .add-button:hover {
+    background: #42b983;
+  }
+</style>

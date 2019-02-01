@@ -3,7 +3,7 @@
     <status-bar></status-bar>
     <div style="display: flex; flex: 1; background: #0099CC">
       <nav-drawer></nav-drawer>
-      <div style="overflow: hidden; width: 100%">
+      <div style="overflow: auto; width: 100%">
         <router-view />
       </div>
     </div>
@@ -71,16 +71,16 @@
       return {
         routes: [
           {
-            title: 'Dashboard',
-            link:  './#/dashboard'
-          },
-          {
-            title: 'Habits',
-            link:  './#/habits'
+            title: 'Today',
+            link:  './#/today'
           },
           {
             title: 'Projects',
             link:  './#/projects'
+          },
+          {
+            title: 'Goals',
+            link:  './#/goals'
           },
         ]
       }
@@ -121,14 +121,14 @@
   }
 
   .nav-list {
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     color: white;
     font-size: 20px;
     margin: 0;
     overflow: scroll;
-    width: 350px;
+    width: 200px;
   }
 
   .nav-list--item {
@@ -169,11 +169,12 @@
   }
 
   .status-bar {
-    height: 46px;
+    height: 50px;
     width: 100%;
     border-bottom: solid #314863 1px;
     display: flex;
     padding: 6px;
+    flex-shrink: 0;
   }
 
   #app {

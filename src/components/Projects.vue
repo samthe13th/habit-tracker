@@ -307,7 +307,6 @@
   }
 
   .toolbar {
-    background: #7599c4;
     height: 60px;
     display: flex;
     flex-shrink: 0;
@@ -329,7 +328,7 @@
   }
 
   .project-card {
-    background: rgb(227, 236, 246);
+    background: white;
     margin: 10px auto;
     padding: 30px 10px;
     border-radius: 10px;
